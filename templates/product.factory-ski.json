@@ -121,42 +121,15 @@
                 "flow_bundle": "would-you-like-to-upgrade-your-skis-with-the-flow-bundle",
                 "enable_trip": true,
                 "enable_bindings": true,
-                "enable_quantity_picker": false
+                "enable_quantity_picker": false,
+                "graphic_collection_1": "house-graphics",
+                "graphic_collection_2": "james-niehues-collection",
+                "graphic_collection_3": "artist-series",
+                "flex_option_1": "Standard Flex",
+                "flex_option_2": "More Forgiving (Softer)",
+                "flex_option_3": "More Aggressive (Stiffer)"
               },
-              "blocks": {
-                "graphics-house": {
-                  "type": "_ski-graphics",
-                  "settings": { "graphic_collection": "house-graphics" }
-                },
-                "graphics-niehues": {
-                  "type": "_ski-graphics",
-                  "settings": { "graphic_collection": "james-niehues-collection" }
-                },
-                "graphics-artist": {
-                  "type": "_ski-graphics",
-                  "settings": { "graphic_collection": "artist-series" }
-                },
-                "flex-standard": {
-                  "type": "_ski-flex",
-                  "settings": { "flex_option": "Standard Flex" }
-                },
-                "flex-soft": {
-                  "type": "_ski-flex",
-                  "settings": { "flex_option": "More Forgiving (Softer)" }
-                },
-                "flex-stiff": {
-                  "type": "_ski-flex",
-                  "settings": { "flex_option": "More Aggressive (Stiffer)" }
-                }
-              },
-              "block_order": [
-                "graphics-house",
-                "graphics-niehues",
-                "graphics-artist",
-                "flex-standard",
-                "flex-soft",
-                "flex-stiff"
-              ]
+              "blocks": {}
             },
             "description": {
               "type": "text",
