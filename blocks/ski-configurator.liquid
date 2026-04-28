@@ -1,0 +1,509 @@
+{%- liquid
+  assign current_variant = closest.product.selected_or_first_available_variant
+  assign graphic_blocks = block.blocks | where: 'type', '_ski-graphics'
+  assign flex_blocks = block.blocks | where: 'type', '_ski-flex'
+  assign default_open = block.settings.default_open_panel
+  assign s = block.settings
+-%}
+
+{%- capture accordion_style -%}
+--border-width: {{ s.border_width }}px;
+--border-style: {{ s.border }};
+--border-color: rgb(var(--color-border-rgb) / {{ s.border_opacity | divided_by: 100.0 }});
+--border-radius: {{ s.border_radius }}px;
+{%- if s.border_radius > 0 %} overflow: hidden;{% endif %}
+--padding-block-start: {{ s.accordion_padding_block_start }}px;
+--padding-block-end: {{ s.accordion_padding_block_end }}px;
+--padding-inline-start: {{ s.accordion_padding_inline_start }}px;
+--padding-inline-end: {{ s.accordion_padding_inline_end }}px;
+{%- endcapture -%}
+
+<link rel="stylesheet" href="{{ 'ski-configurator.css' | asset_url }}">
+<script type="module">
+  import '@theme/ski-configurator';
+</script>
+
+<ski-configurator
+  class="ski-configurator"
+  data-block-id="{{ block.id }}"
+  data-default-variant-id="{{ current_variant.id }}"
+  data-default-variant-price="{{ current_variant.price }}"
+  data-skip-subtree-update="true"
+  style="--ski-accordion-gap: {{ s.accordion_gap }}px;"
+  {{ block.shopify_attributes }}
+>
+  <form on:submit="ski-configurator/handleSubmit" novalidate>
+
+    {%- if s.customize_heading != blank -%}
+      <h2 class="ski-configurator__customize-heading {{ s.customize_heading_preset }}">
+        {{- s.customize_heading -}}
+      </h2>
+    {%- endif -%}
+
+    {%- if graphic_blocks.size > 0 -%}
+      <accordion-custom class="ski-configurator__accordion border-style spacing-style" style="{{ accordion_style }}">
+        <details class="details"{% if default_open == 'graphics' %} open{% endif %}>
+          <summary class="details__header">
+            Choose your graphic
+            <span class="svg-wrapper icon-caret icon-animated">
+              {{- 'icon-caret.svg' | inline_asset_content -}}
+            </span>
+          </summary>
+          <div class="details-content">
+            <div class="ski-configurator__tabs">
+              <div class="ski-configurator__tabs-nav" role="tablist">
+                {%- for graphic_block in graphic_blocks -%}
+                  {%- assign collection_handle = graphic_block.settings.graphic_collection -%}
+                  {%- assign first_price = collections[collection_handle].products.first.price -%}
+                  <button
+                    type="button"
+                    class="ski-configurator__tab-button"
+                    role="tab"
+                    aria-selected="{% if forloop.first %}true{% else %}false{% endif %}"
+                    data-tab-target="tab-{{ block.id }}-{{ collection_handle }}"
+                    on:click="ski-configurator/handleTabSelect"
+                  >
+                    {{- collections[collection_handle].title -}}
+                    {%- if first_price > 0 %} <small>+{{ first_price | money_without_trailing_zeros }}</small>{%- endif -%}
+                  </button>
+                {%- endfor -%}
+              </div>
+
+              <select
+                class="ski-configurator__tabs-mobile"
+                on:change="ski-configurator/handleTabSelect"
+                aria-label="Choose your graphic"
+              >
+                {%- for graphic_block in graphic_blocks -%}
+                  {%- assign collection_handle = graphic_block.settings.graphic_collection -%}
+                  <option value="tab-{{ block.id }}-{{ collection_handle }}">
+                    {{- collections[collection_handle].title -}}
+                  </option>
+                {%- endfor -%}
+              </select>
+
+              <div class="ski-configurator__tabs-panels">
+                {%- for graphic_block in graphic_blocks -%}
+                  {%- assign collection_handle = graphic_block.settings.graphic_collection -%}
+                  {%- assign graphics = collections[collection_handle].products | where: 'available' -%}
+                  <div
+                    class="ski-configurator__tab-panel"
+                    id="tab-{{ block.id }}-{{ collection_handle }}"
+                    role="tabpanel"
+                    data-active="{% if forloop.first %}true{% else %}false{% endif %}"
+                  >
+                    {%- for graphic in graphics -%}
+                      {%- assign graphic_variant = graphic.selected_or_first_available_variant -%}
+                      <label class="ski-configurator__option-card" for="graphic-{{ block.id }}-{{ graphic.handle }}">
+                        <input
+                          class="ski-configurator__option-input"
+                          type="radio"
+                          id="graphic-{{ block.id }}-{{ graphic.handle }}"
+                          name="graphic"
+                          value="{{ graphic.handle }}"
+                          data-variant-id="{{ graphic_variant.id }}"
+                          data-title="{{ graphic.title | escape }}"
+                          data-image="{{ graphic.featured_image | image_url: width: 550 }}"
+                          data-price="{{ graphic.price }}"
+                          on:change="ski-configurator/handleGraphicChange"
+                        >
+                        <div class="ski-configurator__option-card-content">
+                          {%- if graphic.featured_image -%}
+                            <img
+                              class="ski-configurator__option-image"
+                              src="{{ graphic.featured_image | image_url: width: 200 }}"
+                              alt="{{ graphic.featured_image.alt | escape }}"
+                              loading="lazy"
+                              width="200"
+                              height="200"
+                            >
+                          {%- endif -%}
+                          <p class="ski-configurator__option-title">{{ graphic.title }}</p>
+                          <span class="ski-configurator__option-price">
+                            +{{ graphic.price | money_without_trailing_zeros }}
+                          </span>
+                        </div>
+                      </label>
+                    {%- endfor -%}
+                  </div>
+                {%- endfor -%}
+              </div>
+            </div>
+          </div>
+        </details>
+      </accordion-custom>
+    {%- endif -%}
+
+    {%- if flex_blocks.size > 0 -%}
+      <accordion-custom class="ski-configurator__accordion border-style spacing-style" style="{{ accordion_style }}">
+        <details class="details"{% if default_open == 'flex' %} open{% endif %}>
+          <summary class="details__header">
+            Choose your flex
+            <span class="svg-wrapper icon-caret icon-animated">
+              {{- 'icon-caret.svg' | inline_asset_content -}}
+            </span>
+          </summary>
+          <div class="details-content">
+            <fieldset class="ski-configurator__radio-list">
+              <legend class="visually-hidden">Choose your flex</legend>
+              {%- for flex_block in flex_blocks -%}
+                {%- assign flex_value = flex_block.settings.flex_option -%}
+                <div class="ski-configurator__radio-row">
+                  <input
+                    type="radio"
+                    id="flex-{{ block.id }}-{{ flex_value | handleize }}"
+                    name="flex"
+                    value="{{ flex_value }}"
+                    on:change="ski-configurator/handleFlexChange"
+                    {% if forloop.first %}checked{% endif %}
+                  >
+                  <label for="flex-{{ block.id }}-{{ flex_value | handleize }}">{{ flex_value }}</label>
+                </div>
+              {%- endfor -%}
+            </fieldset>
+          </div>
+        </details>
+      </accordion-custom>
+    {%- endif -%}
+
+    {%- if s.flow_bundle != blank -%}
+      {%- assign flow_product = all_products[s.flow_bundle] -%}
+      <accordion-custom class="ski-configurator__accordion border-style spacing-style" style="{{ accordion_style }}">
+        <details class="details"{% if default_open == 'flow' %} open{% endif %}>
+          <summary class="details__header">
+            Flow Bundle
+            <span class="svg-wrapper icon-caret icon-animated">
+              {{- 'icon-caret.svg' | inline_asset_content -}}
+            </span>
+          </summary>
+          <div class="details-content">
+            {%- if s.flow_bundle_desc != blank -%}
+              <div class="rte">{{ s.flow_bundle_desc }}</div>
+            {%- endif -%}
+            <fieldset class="ski-configurator__radio-list">
+              <legend class="visually-hidden">Flow Bundle</legend>
+              {%- for variant in flow_product.variants -%}
+                <div class="ski-configurator__radio-row">
+                  <input
+                    type="radio"
+                    id="flow-{{ block.id }}-{{ variant.id }}"
+                    name="flow"
+                    value="{{ variant.id }}"
+                    data-price="{{ variant.price }}"
+                    on:change="ski-configurator/handleFlowChange"
+                    {% if forloop.first %}checked{% endif %}
+                  >
+                  <label for="flow-{{ block.id }}-{{ variant.id }}">
+                    {{ variant.title }}
+                    {%- if variant.price > 0 %} (+{{ variant.price | money_without_trailing_zeros }}){%- endif -%}
+                  </label>
+                </div>
+              {%- endfor -%}
+            </fieldset>
+          </div>
+        </details>
+      </accordion-custom>
+    {%- endif -%}
+
+    {%- if s.enable_bindings -%}
+      {%- assign bindings = collections['bindings'].products | where: 'available' -%}
+      {%- if bindings.size > 0 -%}
+        <accordion-custom class="ski-configurator__accordion border-style spacing-style" style="{{ accordion_style }}">
+          <details class="details"{% if default_open == 'bindings' %} open{% endif %}>
+            <summary class="details__header">
+              Add bindings
+              <span class="svg-wrapper icon-caret icon-animated">
+                {{- 'icon-caret.svg' | inline_asset_content -}}
+              </span>
+            </summary>
+            <div class="details-content">
+              <fieldset class="ski-configurator__bindings-grid">
+                <legend class="visually-hidden">Bindings</legend>
+                {%- for binding in bindings -%}
+                  {%- assign binding_variant = binding.selected_or_first_available_variant -%}
+                  <label class="ski-configurator__option-card" for="binding-{{ block.id }}-{{ binding.handle }}">
+                    <input
+                      class="ski-configurator__option-input"
+                      type="radio"
+                      id="binding-{{ block.id }}-{{ binding.handle }}"
+                      name="binding"
+                      value="{{ binding.handle }}"
+                      data-variant-id="{{ binding_variant.id }}"
+                      data-title="{{ binding.title | escape }}"
+                      data-price="{{ binding.price }}"
+                      on:change="ski-configurator/handleBindingChange"
+                    >
+                    <div class="ski-configurator__option-card-content">
+                      {%- if binding.featured_image -%}
+                        <img
+                          class="ski-configurator__option-image"
+                          src="{{ binding.featured_image | image_url: width: 200 }}"
+                          alt="{{ binding.featured_image.alt | escape }}"
+                          loading="lazy"
+                          width="200"
+                          height="200"
+                        >
+                      {%- endif -%}
+                      <p class="ski-configurator__option-title">{{ binding.title }}</p>
+                      <span class="ski-configurator__option-price">{{ binding.price | money }}</span>
+                    </div>
+                  </label>
+                {%- endfor -%}
+              </fieldset>
+            </div>
+          </details>
+        </accordion-custom>
+      {%- endif -%}
+    {%- endif -%}
+
+    {%- if s.enable_trip -%}
+      <div class="ski-configurator__trip">
+        <input
+          type="checkbox"
+          id="trip-{{ block.id }}"
+          name="upcoming_trip"
+          class="ski-configurator__trip-checkbox"
+          on:change="ski-configurator/handleTripToggle"
+        >
+        <label for="trip-{{ block.id }}">I have an upcoming trip</label>
+        <input
+          type="date"
+          name="trip_date"
+          class="ski-configurator__trip-date"
+          aria-label="Trip date"
+          on:change="ski-configurator/handleTripDateChange"
+        >
+      </div>
+    {%- endif -%}
+
+    <div class="ski-configurator__total">
+      Your total:
+      <span class="ski-configurator__total-amount" data-ski-configurator-price>
+        {{- current_variant.price | money -}}
+      </span>
+    </div>
+
+    <ul class="ski-configurator__errors" data-ski-configurator-errors hidden></ul>
+
+    <input
+      type="number"
+      name="quantity"
+      class="ski-configurator__quantity"
+      value="1"
+      min="1"
+      pattern="[0-9]*"
+      on:change="ski-configurator/handleQuantityChange"
+      {% unless s.enable_quantity_picker %}data-hidden="true"{% endunless %}
+    >
+
+    {%- if current_variant.available -%}
+      <button type="submit" class="button button-primary ski-configurator__submit">
+        {{ 'products.product.add_to_cart' | t }}
+      </button>
+    {%- endif -%}
+  </form>
+</ski-configurator>
+
+{% schema %}
+{
+  "name": "Ski configurator",
+  "blocks": [
+    { "type": "_ski-graphics" },
+    { "type": "_ski-flex" }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Heading"
+    },
+    {
+      "type": "text",
+      "id": "customize_heading",
+      "label": "Heading text",
+      "default": "Customize your skis",
+      "info": "Leave blank to hide the heading."
+    },
+    {
+      "type": "select",
+      "id": "customize_heading_preset",
+      "label": "Heading typography",
+      "options": [
+        { "value": "paragraph", "label": "Paragraph" },
+        { "value": "h1", "label": "H1" },
+        { "value": "h2", "label": "H2" },
+        { "value": "h3", "label": "H3" },
+        { "value": "h4", "label": "H4" },
+        { "value": "h5", "label": "H5" },
+        { "value": "h6", "label": "H6" }
+      ],
+      "default": "h6"
+    },
+    {
+      "type": "header",
+      "content": "Accordion appearance"
+    },
+    {
+      "type": "select",
+      "id": "default_open_panel",
+      "label": "Open by default",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "graphics", "label": "Choose your graphic" },
+        { "value": "flex", "label": "Choose your flex" },
+        { "value": "flow", "label": "Flow Bundle" },
+        { "value": "bindings", "label": "Add bindings" }
+      ],
+      "default": "graphics"
+    },
+    {
+      "type": "range",
+      "id": "accordion_gap",
+      "label": "Gap between accordions",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "header",
+      "content": "Accordion borders"
+    },
+    {
+      "type": "select",
+      "id": "border",
+      "label": "Border style",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "solid", "label": "Solid" }
+      ],
+      "default": "none"
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "min": 0,
+      "max": 10,
+      "step": 1,
+      "unit": "px",
+      "label": "Border thickness",
+      "default": 1,
+      "visible_if": "{{ block.settings.border != 'none' }}"
+    },
+    {
+      "type": "range",
+      "id": "border_opacity",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "%",
+      "label": "Border opacity",
+      "default": 100,
+      "visible_if": "{{ block.settings.border != 'none' }}"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 40,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Accordion padding"
+    },
+    {
+      "type": "range",
+      "id": "accordion_padding_block_start",
+      "label": "Top",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "accordion_padding_block_end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "accordion_padding_inline_start",
+      "label": "Left",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "accordion_padding_inline_end",
+      "label": "Right",
+      "min": 0,
+      "max": 60,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "Add-ons"
+    },
+    {
+      "type": "product",
+      "id": "flow_bundle",
+      "label": "Flow Bundle Product"
+    },
+    {
+      "type": "richtext",
+      "id": "flow_bundle_desc",
+      "label": "Flow Bundle Description",
+      "default": "<p>Make your Factory skis faster and tougher with the FLOW Bundle. World Cup Base makes your skis glide better in all conditions, and Aramid Impact Resistance makes them tougher.</p>"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_trip",
+      "label": "Enable Trip Q/A?",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_bindings",
+      "label": "Enable Binding Upsell",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_quantity_picker",
+      "default": false,
+      "label": "Enable Quantity Picker?"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Ski configurator",
+      "blocks": {
+        "graphics-house": {
+          "type": "_ski-graphics",
+          "settings": { "graphic_collection": "house-graphics" }
+        },
+        "flex-standard": {
+          "type": "_ski-flex",
+          "settings": { "flex_option": "Standard Flex" }
+        }
+      },
+      "block_order": ["graphics-house", "flex-standard"]
+    }
+  ]
+}
+{% endschema %}
