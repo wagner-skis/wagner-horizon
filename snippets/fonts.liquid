@@ -1,42 +1,28 @@
 {% # theme-check-disable %}
-{%- unless settings.type_body_font.system? -%}
-  <link
-    rel="preload"
-    as="font"
-    href="{{ settings.type_body_font | font_url }}"
-    type="font/woff2"
-    crossorigin
-    fetchpriority="low"
-  >
-{%- endunless -%}
-{%- unless settings.type_subheading_font.system? -%}
-  <link
-    rel="preload"
-    as="font"
-    href="{{ settings.type_subheading_font | font_url }}"
-    type="font/woff2"
-    crossorigin
-    fetchpriority="low"
-  >
-{%- endunless -%}
-{%- unless settings.type_heading_font.system? -%}
-  <link
-    rel="preload"
-    as="font"
-    href="{{ settings.type_heading_font | font_url }}"
-    type="font/woff2"
-    crossorigin
-    fetchpriority="low"
-  >
-{%- endunless -%}
-{%- unless settings.type_accent_font.system? -%}
-  <link
-    rel="preload"
-    as="font"
-    href="{{ settings.type_accent_font | font_url }}"
-    type="font/woff2"
-    crossorigin
-    fetchpriority="low"
-  >
-{%- endunless -%}
+<link
+  rel="preload"
+  as="font"
+  href="{{ 'DINNextLTPro-Light.woff2' | asset_url }}"
+  type="font/woff2"
+  crossorigin
+  fetchpriority="high"
+>
+<link
+  rel="preload"
+  as="font"
+  href="{{ 'DINNextLTPro-Medium.woff2' | asset_url }}"
+  type="font/woff2"
+  crossorigin
+  fetchpriority="high"
+>
+<link
+  rel="preload"
+  as="font"
+  href="{{ 'DINNextLTPro-Bold.woff2' | asset_url }}"
+  type="font/woff2"
+  crossorigin
+  fetchpriority="high"
+>
+
+<link rel="stylesheet" href="{{ 'wagner-fonts.css' | asset_url }}">
 {% # theme-check-enable %}

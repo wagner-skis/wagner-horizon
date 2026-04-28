@@ -352,28 +352,52 @@
         "content": "t:content.fonts"
       },
       {
-        "type": "font_picker",
-        "id": "type_body_font",
-        "default": "din_next_n3",
-        "label": "t:options.body"
+        "type": "paragraph",
+        "content": "All typography slots use the self-hosted DIN Next LT Pro family. Pick the weight for each slot below."
       },
       {
-        "type": "font_picker",
-        "id": "type_subheading_font",
-        "default": "din_next_n5",
-        "label": "t:options.subheading"
+        "type": "select",
+        "id": "type_body_weight",
+        "label": "t:options.body",
+        "options": [
+          { "value": "300", "label": "Light" },
+          { "value": "500", "label": "Medium" },
+          { "value": "700", "label": "Bold" }
+        ],
+        "default": "300"
       },
       {
-        "type": "font_picker",
-        "id": "type_heading_font",
-        "default": "din_next_n7",
-        "label": "t:options.heading"
+        "type": "select",
+        "id": "type_subheading_weight",
+        "label": "t:options.subheading",
+        "options": [
+          { "value": "300", "label": "Light" },
+          { "value": "500", "label": "Medium" },
+          { "value": "700", "label": "Bold" }
+        ],
+        "default": "500"
       },
       {
-        "type": "font_picker",
-        "id": "type_accent_font",
-        "default": "din_next_n7",
-        "label": "t:options.accent"
+        "type": "select",
+        "id": "type_heading_weight",
+        "label": "t:options.heading",
+        "options": [
+          { "value": "300", "label": "Light" },
+          { "value": "500", "label": "Medium" },
+          { "value": "700", "label": "Bold" }
+        ],
+        "default": "700"
+      },
+      {
+        "type": "select",
+        "id": "type_accent_weight",
+        "label": "t:options.accent",
+        "options": [
+          { "value": "300", "label": "Light" },
+          { "value": "500", "label": "Medium" },
+          { "value": "700", "label": "Bold" }
+        ],
+        "default": "700"
       },
       {
         "type": "header",
