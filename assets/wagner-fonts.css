@@ -1,0 +1,47 @@
+@font-face {
+  font-family: 'DIN Next LT Pro';
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+  src: url('DINNextLTPro-Light.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'DIN Next LT Pro';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('DINNextLTPro-LightItalic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'DIN Next LT Pro';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('DINNextLTPro-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'DIN Next LT Pro';
+  font-style: italic;
+  font-weight: 500;
+  font-display: swap;
+  src: url('DINNextLTPro-MediumItalic.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'DIN Next LT Pro';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('DINNextLTPro-Bold.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'DIN Next LT Pro';
+  font-style: italic;
+  font-weight: 700;
+  font-display: swap;
+  src: url('DINNextLTPro-BoldItalic.woff2') format('woff2');
+}

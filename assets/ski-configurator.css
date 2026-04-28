@@ -1,0 +1,207 @@
+.ski-configurator {
+  display: block;
+}
+
+.ski-configurator__accordion {
+  display: block;
+}
+
+.ski-configurator__accordion + .ski-configurator__accordion {
+  margin-block-start: var(--ski-accordion-gap, 0px);
+}
+
+.ski-configurator__accordion .details__header {
+  padding-block: var(--padding-sm);
+  padding-inline: var(--padding-md);
+}
+
+.ski-configurator__customize-heading {
+  margin-block: var(--margin-md) var(--margin-xs);
+}
+
+.ski-configurator__tabs-nav {
+  display: flex;
+  border-block-end: var(--style-border-width) solid var(--color-border);
+}
+
+@media (max-width: 749px) {
+  .ski-configurator__tabs-nav {
+    display: none;
+  }
+}
+
+.ski-configurator__tab-button {
+  flex: 1;
+  padding: var(--padding-xs);
+  background: transparent;
+  border: 0;
+  border-block-end: 2px solid transparent;
+  cursor: pointer;
+  font-size: var(--font-paragraph-sm--size);
+  text-transform: uppercase;
+}
+
+.ski-configurator__tab-button[aria-selected='true'] {
+  font-weight: var(--font-heading--weight);
+  border-block-end-color: var(--color-foreground);
+}
+
+.ski-configurator__tabs-mobile {
+  display: none;
+}
+
+@media (max-width: 749px) {
+  .ski-configurator__tabs-mobile {
+    display: block;
+    width: 100%;
+    padding: var(--padding-xs);
+    margin-block-end: var(--margin-2xs);
+  }
+}
+
+.ski-configurator__tab-panel {
+  display: none;
+  padding: var(--padding-sm);
+  max-height: min(60svh, 30rem);
+  overflow-y: auto;
+}
+
+.ski-configurator__tab-panel[data-active='true'] {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap-2xs);
+}
+
+.ski-configurator__option-card {
+  position: relative;
+}
+
+.ski-configurator__option-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.ski-configurator__option-card-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-2xs);
+  padding: var(--padding-2xs);
+  border: 2px solid transparent;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.ski-configurator__option-input:checked ~ .ski-configurator__option-card-content {
+  border-color: var(--color-foreground);
+  background: var(--color-background);
+}
+
+.ski-configurator__option-image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border: var(--style-border-width) solid var(--color-border);
+}
+
+.ski-configurator__option-title {
+  text-align: center;
+  font-size: var(--font-paragraph-sm--size);
+  font-weight: var(--font-heading--weight);
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.ski-configurator__option-price {
+  font-size: var(--font-paragraph-sm--size);
+}
+
+.ski-configurator__radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2xs);
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.ski-configurator__radio-row {
+  display: flex;
+  gap: var(--gap-2xs);
+  align-items: center;
+}
+
+.ski-configurator__bindings-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--gap-2xs);
+  max-height: min(60svh, 30rem);
+  overflow-y: auto;
+  padding: var(--padding-sm);
+  border: 0;
+  margin: 0;
+}
+
+.ski-configurator__trip {
+  margin-block: var(--margin-md);
+}
+
+.ski-configurator__trip-date {
+  display: none;
+  margin-block-start: var(--margin-2xs);
+}
+
+.ski-configurator__trip-checkbox:checked ~ .ski-configurator__trip-date {
+  display: block;
+}
+
+.ski-configurator__total {
+  margin-block: var(--margin-md);
+  font-size: var(--font-paragraph--size);
+}
+
+.ski-configurator__total-amount {
+  font-weight: var(--font-heading--weight);
+  font-size: var(--font-h5--size);
+}
+
+.ski-configurator__errors {
+  list-style: none;
+  padding: var(--padding-sm);
+  margin: var(--margin-sm) 0;
+  background: var(--color-background-secondary, #fdecea);
+  color: var(--color-error, #b71c1c);
+  border: var(--style-border-width) solid currentColor;
+}
+
+.ski-configurator__errors[hidden] {
+  display: none;
+}
+
+.ski-configurator__errors li {
+  list-style: disc;
+  margin-inline-start: var(--margin-md);
+}
+
+.ski-configurator__quantity {
+  width: 4rem;
+}
+
+.ski-configurator__quantity[data-hidden='true'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.ski-configurator__submit {
+  width: 100%;
+  margin-block-start: var(--margin-md);
+}
