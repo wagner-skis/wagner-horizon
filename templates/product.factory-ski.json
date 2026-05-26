@@ -1,3 +1,12 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
 {
   "sections": {
     "main": {
@@ -7,7 +16,7 @@
           "type": "_product-media-gallery",
           "static": true,
           "settings": {
-            "media_presentation": "grid",
+            "media_presentation": "carousel",
             "media_columns": "two",
             "image_gap": 4,
             "large_first_image": false,
@@ -16,6 +25,7 @@
             "slideshow_mobile_controls_style": "dots",
             "thumbnail_position": "right",
             "thumbnail_width": 44,
+            "thumbnail_radius": 0,
             "aspect_ratio": "adapt",
             "constrain_to_viewport": true,
             "media_fit": "contain",
@@ -67,7 +77,16 @@
                 "max_width": "normal",
                 "alignment": "left",
                 "type_preset": "h3",
+                "font": "var(--font-body--family)",
+                "font_size": "1rem",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
                 "wrap": "pretty",
+                "color": "var(--color-foreground)",
+                "background": false,
+                "background_color": "#00000026",
+                "corner_radius": 0,
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -82,7 +101,14 @@
                 "show_installments": false,
                 "show_tax_info": false,
                 "type_preset": "paragraph",
+                "width": "100%",
                 "alignment": "left",
+                "font": "var(--font-body--family)",
+                "font_size": "1rem",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "color": "var(--color-foreground)",
                 "padding-block-start": 4,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -119,27 +145,41 @@
                 "accordion_padding_inline_start": 0,
                 "accordion_padding_inline_end": 0,
                 "flow_bundle": "would-you-like-to-upgrade-your-skis-with-the-flow-bundle",
+                "flow_bundle_desc": "<p>Make your Factory skis faster and tougher with the FLOW Bundle. World Cup Base makes your skis glide better in all conditions, and Aramid Impact Resistance makes them tougher.</p>",
                 "enable_trip": true,
                 "enable_bindings": true,
                 "enable_quantity_picker": false,
                 "graphic_collection_1": "house-graphics",
                 "graphic_collection_2": "james-niehues-collection",
                 "graphic_collection_3": "artist-series",
+                "graphic_collection_4": "",
                 "flex_option_1": "Standard Flex",
                 "flex_option_2": "More Forgiving (Softer)",
-                "flex_option_3": "More Aggressive (Stiffer)"
+                "flex_option_3": "More Aggressive (Stiffer)",
+                "flex_option_4": ""
               },
               "blocks": {}
             },
             "description": {
               "type": "text",
               "name": "Product description",
+              "disabled": true,
               "settings": {
                 "text": "{{ closest.product.description }}",
                 "width": "100%",
                 "max_width": "normal",
                 "alignment": "left",
                 "type_preset": "rte",
+                "font": "var(--font-body--family)",
+                "font_size": "1rem",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "wrap": "pretty",
+                "color": "var(--color-foreground)",
+                "background": false,
+                "background_color": "#00000026",
+                "corner_radius": 0,
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -163,11 +203,14 @@
         "equal_columns": false,
         "limit_details_width": false,
         "gap": 48,
+        "enable_sticky_add_to_cart": true,
         "color_scheme": "",
         "padding-block-start": 0,
         "padding-block-end": 0
       }
     }
   },
-  "order": ["main"]
+  "order": [
+    "main"
+  ]
 }
