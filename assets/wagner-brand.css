@@ -1,0 +1,147 @@
+/* Wagner brand layer — additive only. Loads after base.css. */
+
+:root {
+  --wagner-navy: #1a3a5c;
+  --wagner-ink: #0a0a0a;
+  --wagner-eyebrow-tracking: 0.18em;
+  --wagner-link-underline-duration: 240ms;
+}
+
+/* ---------- Scrollbar ---------- */
+/* Thin, ink-on-paper. Restrained — does not steal focus from photography. */
+@supports selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--wagner-ink) transparent;
+  }
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background-color: rgba(10, 10, 10, 0.45);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--wagner-ink);
+  }
+}
+
+/* ---------- Eyebrow / kicker label ---------- */
+/* Use on small text overlays above headings: "CUSTOM SKIS", "01 — TALK". */
+.wagner-eyebrow {
+  display: inline-block;
+  font-family: var(--font-subheading--family, var(--font-body--family));
+  font-weight: 500;
+  font-size: 0.75rem;
+  line-height: 1;
+  letter-spacing: var(--wagner-eyebrow-tracking);
+  text-transform: uppercase;
+}
+
+.wagner-eyebrow--with-rule::before {
+  content: '';
+  display: inline-block;
+  width: 1.5rem;
+  height: 1px;
+  background: currentColor;
+  vertical-align: middle;
+  margin-inline-end: 0.625rem;
+  transform: translateY(-1px);
+}
+
+/* ---------- Text link underline slide ---------- */
+/* Opt-in via .wagner-link — leaves theme link defaults untouched. */
+.wagner-link {
+  position: relative;
+  display: inline-block;
+  text-decoration: none;
+  color: inherit;
+  letter-spacing: 0.04em;
+  padding-block-end: 2px;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-size: 100% 1px;
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  transition: background-size var(--wagner-link-underline-duration) ease;
+}
+.wagner-link:hover,
+.wagner-link:focus-visible {
+  background-size: 0 1px;
+  background-position: 100% 100%;
+}
+.wagner-link--reverse {
+  background-size: 0 1px;
+  background-position: 100% 100%;
+}
+.wagner-link--reverse:hover,
+.wagner-link--reverse:focus-visible {
+  background-size: 100% 1px;
+  background-position: 0 100%;
+}
+
+/* Arrow link: text + animated arrow. <a class="wagner-arrow-link">Read more<span aria-hidden="true">→</span></a> */
+.wagner-arrow-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  font-size: 0.8125rem;
+  text-decoration: none;
+  color: inherit;
+}
+.wagner-arrow-link > span {
+  display: inline-block;
+  transition: transform 220ms ease;
+}
+.wagner-arrow-link:hover > span,
+.wagner-arrow-link:focus-visible > span {
+  transform: translateX(4px);
+}
+
+/* ---------- Buttons: editorial uppercase tracking ---------- */
+/* Theme buttons stay rectangular via settings; this adds the editorial type treatment. */
+.button,
+.button-primary,
+.button-secondary {
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+}
+
+/* ---------- Section divider rule ---------- */
+.wagner-rule {
+  border: 0;
+  height: 1px;
+  background: currentColor;
+  opacity: 0.18;
+  margin-block: 2.5rem;
+}
+
+/* ---------- Image hover (extra polish on top of theme card-hover-effect) ---------- */
+/* Use class .wagner-img-hover on a wrapper containing an <img>. */
+.wagner-img-hover {
+  overflow: hidden;
+  display: block;
+}
+.wagner-img-hover img {
+  transition: transform 600ms cubic-bezier(0.2, 0.6, 0.2, 1);
+  will-change: transform;
+}
+.wagner-img-hover:hover img,
+.wagner-img-hover:focus-within img {
+  transform: scale(1.04);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .wagner-link,
+  .wagner-arrow-link > span,
+  .wagner-img-hover img {
+    transition: none;
+  }
+}

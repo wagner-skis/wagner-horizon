@@ -7,36 +7,109 @@
  * made to this file may be overwritten.
  * ------------------------------------------------------------
  */
- {
+{
   "sections": {
     "main": {
       "type": "main-blog",
       "blocks": {
-        "title": {
-          "type": "text",
-          "name": "Title",
+        "tag-filter": {
+          "type": "blog-tag-filter",
+          "name": "Tag filter",
           "settings": {
-            "text": "<h1>{{ closest.blog.title }}</h1>",
-            "width": "fit-content",
-            "max_width": "narrow",
-            "alignment": "left",
-            "type_preset": "h2",
-            "font": "var(--font-primary--family)",
-            "font_size": "",
-            "line_height": "normal",
-            "letter_spacing": "normal",
-            "case": "none",
-            "wrap": "pretty",
-            "color": "",
-            "background": false,
-            "background_color": "#00000026",
-            "corner_radius": 0,
-            "padding-block-start": 48,
-            "padding-block-end": 48,
-            "padding-inline-start": 0,
-            "padding-inline-end": 0
+            "color_scheme": "",
+            "alignment": "center",
+            "tile_size": 110,
+            "gap": 20,
+            "show_all": true,
+            "all_label": "All",
+            "padding-block-start": 8,
+            "padding-block-end": 32
           },
-          "blocks": {}
+          "blocks": {
+            "tile-buyers-guide": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Buyer's Guide",
+                "tag": "buyers-guide"
+              },
+              "blocks": {}
+            },
+            "tile-factory-tour": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Factory Tour",
+                "tag": "factory-tour"
+              },
+              "blocks": {}
+            },
+            "tile-adventure-travel": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Adventure Travel",
+                "tag": "adventure-travel"
+              },
+              "blocks": {}
+            },
+            "tile-athletes-creators": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Athletes / Creators",
+                "tag": "athletes-creators"
+              },
+              "blocks": {}
+            },
+            "tile-fitness-nutrition": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Fitness / Nutrition",
+                "tag": "fitness-nutrition"
+              },
+              "blocks": {}
+            },
+            "tile-hard-goods": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Hard Goods",
+                "tag": "hard-goods"
+              },
+              "blocks": {}
+            },
+            "tile-topsheet-graphics": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Topsheet Graphics",
+                "tag": "graphics-inspiration"
+              },
+              "blocks": {}
+            },
+            "tile-snow-safety": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Snow Safety",
+                "tag": "snow-safety"
+              },
+              "blocks": {}
+            },
+            "tile-skiing-podcast": {
+              "type": "_blog-tag-tile",
+              "settings": {
+                "label": "Skiing Podcast",
+                "tag": "skiing-pod"
+              },
+              "blocks": {}
+            }
+          },
+          "block_order": [
+            "tile-buyers-guide",
+            "tile-factory-tour",
+            "tile-adventure-travel",
+            "tile-athletes-creators",
+            "tile-fitness-nutrition",
+            "tile-hard-goods",
+            "tile-topsheet-graphics",
+            "tile-snow-safety",
+            "tile-skiing-podcast"
+          ]
         },
         "static-blog-post-card": {
           "type": "_blog-post-card",
@@ -45,6 +118,18 @@
             "alignment": "left"
           },
           "blocks": {
+            "image": {
+              "type": "_blog-post-image",
+              "static": true,
+              "settings": {
+                "height": "large",
+                "border": "none",
+                "border_width": 1,
+                "border_opacity": 100,
+                "border_radius": 4
+              },
+              "blocks": {}
+            },
             "heading": {
               "type": "_heading",
               "name": "t:names.title",
@@ -84,15 +169,20 @@
               },
               "blocks": {}
             },
-            "image": {
-              "type": "_blog-post-image",
+            "content": {
+              "type": "_blog-post-description",
               "static": true,
               "settings": {
-                "height": "large",
-                "border": "none",
-                "border_width": 1,
-                "border_opacity": 100,
-                "border_radius": 4
+                "type_preset": "rte",
+                "font": "var(--font-body--family)",
+                "font_size": "1rem",
+                "line_height": "normal",
+                "letter_spacing": "normal",
+                "case": "none",
+                "wrap": "pretty",
+                "color": "var(--color-foreground)",
+                "padding-block-start": 16,
+                "padding-block-end": 0
               },
               "blocks": {}
             }
@@ -101,7 +191,7 @@
         }
       },
       "block_order": [
-        "title"
+        "tag-filter"
       ],
       "settings": {
         "color_scheme": "",

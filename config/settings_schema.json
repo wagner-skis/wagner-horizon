@@ -2096,24 +2096,10 @@
     "name": "t:names.product_cards",
     "settings": [
       {
-        "type": "checkbox",
-        "id": "quick_add",
-        "label": "t:settings.quick_add",
-        "default": true
-      },
-      {
-        "type": "checkbox",
-        "id": "mobile_quick_add",
-        "label": "t:settings.mobile_quick_add",
-        "default": false,
-        "visible_if": "{{ settings.quick_add == true }}"
-      },
-      {
         "type": "color_scheme",
         "id": "quick_add_color_scheme",
         "label": "t:settings.quick_add_colors",
-        "default": "scheme-1",
-        "visible_if": "{{ settings.quick_add == true }}"
+        "default": "scheme-1"
       },
       {
         "type": "header",

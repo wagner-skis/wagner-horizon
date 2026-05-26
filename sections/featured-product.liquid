@@ -128,6 +128,23 @@
     },
     {
       "type": "header",
+      "content": "t:names.product_cards"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_quick_add",
+      "label": "t:settings.quick_add",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_mobile_quick_add",
+      "label": "t:settings.mobile_quick_add",
+      "default": false,
+      "visible_if": "{{ section.settings.show_quick_add == true }}"
+    },
+    {
+      "type": "header",
       "content": "t:content.padding"
     },
     {

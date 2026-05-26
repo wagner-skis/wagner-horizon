@@ -1,0 +1,283 @@
+{%- liquid
+  assign s = block.settings
+  assign blog_url = closest.blog.url | default: '/blogs/journal'
+  assign all_active = false
+  if current_tags == empty or current_tags == blank
+    assign all_active = true
+  endif
+-%}
+<script src="{{ 'blog-tag-filter.js' | asset_url }}" type="module" fetchpriority="low"></script>
+
+<blog-tag-filter
+  class="blog-tag-filter spacing-style color-{{ s.color_scheme }}"
+  data-alignment="{{ s.alignment }}"
+  data-mode="row"
+  style="
+    --blog-tag-tile-size: {{ s.tile_size }}px;
+    --blog-tag-filter-gap: {{ s.gap }}px;
+    {% render 'spacing-style', settings: s %}
+  "
+  {{ block.shopify_attributes }}
+>
+  <div class="blog-tag-filter__row">
+    {%- if s.show_all -%}
+      <a
+        class="blog-tag-tile blog-tag-tile--all{% if all_active %} blog-tag-tile--active{% endif %}"
+        href="{{ blog_url }}"
+        {% if all_active %}aria-current="page"{% endif %}
+      >
+        <span class="blog-tag-tile__icon-wrap">
+          {%- if s.all_icon != blank -%}
+            {{
+              s.all_icon
+              | image_url: width: 300
+              | image_tag:
+                loading: 'lazy',
+                widths: '120,180,240,300',
+                sizes: 'var(--blog-tag-tile-size, 110px)',
+                class: 'blog-tag-tile__icon',
+                alt: s.all_label
+            }}
+          {%- else -%}
+            <span class="blog-tag-tile__all-glyph" aria-hidden="true">★</span>
+          {%- endif -%}
+        </span>
+        <span class="blog-tag-tile__label">{{ s.all_label }}</span>
+      </a>
+    {%- endif -%}
+    {% content_for 'blocks' %}
+  </div>
+</blog-tag-filter>
+
+{% stylesheet %}
+  .blog-tag-filter {
+    --page-content-width: var(--narrow-page-width);
+    width: 100%;
+  }
+
+  .blog-tag-filter__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--blog-tag-filter-gap, 20px);
+    align-items: flex-start;
+  }
+
+  .blog-tag-filter[data-alignment='start'] .blog-tag-filter__row {
+    justify-content: flex-start;
+  }
+
+  .blog-tag-filter[data-alignment='center'] .blog-tag-filter__row {
+    justify-content: center;
+  }
+
+  .blog-tag-filter[data-alignment='end'] .blog-tag-filter__row {
+    justify-content: flex-end;
+  }
+
+  .blog-tag-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    text-decoration: none;
+    color: inherit;
+    width: var(--blog-tag-tile-size, 110px);
+    transition: transform 0.15s ease;
+  }
+
+  .blog-tag-tile:hover {
+    transform: translateY(-2px);
+  }
+
+  .blog-tag-tile__icon-wrap {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    overflow: hidden;
+  }
+
+  .blog-tag-tile__icon {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  .blog-tag-tile__all-glyph {
+    font-size: calc(var(--blog-tag-tile-size, 110px) * 0.55);
+    line-height: 1;
+    color: rgb(var(--color-foreground-rgb));
+  }
+
+  .blog-tag-tile__label {
+    margin-top: 0.5rem;
+    font-family: var(--font-primary--family);
+    font-size: 0.85rem;
+    font-weight: 500;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  .blog-tag-tile--active .blog-tag-tile__label {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  .blog-tag-filter__select {
+    display: none;
+    width: 100%;
+    max-width: 360px;
+    padding: 0.75rem 2.25rem 0.75rem 1rem;
+    font-family: var(--font-primary--family);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: rgb(var(--color-foreground-rgb));
+    background-color: rgb(var(--color-background-rgb));
+    border: 1px solid rgb(var(--color-foreground-rgb) / var(--opacity-30, 0.3));
+    border-radius: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path fill='currentColor' d='M6 8 0 0h12z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    cursor: pointer;
+  }
+
+  .blog-tag-filter[data-mode='dropdown'] .blog-tag-filter__row {
+    display: none;
+  }
+
+  .blog-tag-filter[data-mode='dropdown'] .blog-tag-filter__select {
+    display: block;
+    margin-inline: auto;
+  }
+
+  .blog-tag-filter[data-alignment='start'][data-mode='dropdown'] .blog-tag-filter__select {
+    margin-inline: 0 auto;
+  }
+
+  .blog-tag-filter[data-alignment='end'][data-mode='dropdown'] .blog-tag-filter__select {
+    margin-inline: auto 0;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Blog tag filter",
+  "tag": null,
+  "blocks": [
+    {
+      "type": "_blog-tag-tile"
+    }
+  ],
+  "settings": [
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "t:settings.color_scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "alignment",
+      "label": "Alignment",
+      "options": [
+        { "value": "start", "label": "Start" },
+        { "value": "center", "label": "Center" },
+        { "value": "end", "label": "End" }
+      ],
+      "default": "center"
+    },
+    {
+      "type": "range",
+      "id": "tile_size",
+      "label": "Tile size",
+      "min": 80,
+      "max": 200,
+      "step": 5,
+      "unit": "px",
+      "default": 110
+    },
+    {
+      "type": "range",
+      "id": "gap",
+      "label": "Gap",
+      "min": 8,
+      "max": 48,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "header",
+      "content": "All tile"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_all",
+      "label": "Show \"All\" tile",
+      "default": true
+    },
+    {
+      "type": "text",
+      "id": "all_label",
+      "label": "All tile label",
+      "default": "All"
+    },
+    {
+      "type": "image_picker",
+      "id": "all_icon",
+      "label": "All tile icon"
+    },
+    {
+      "type": "header",
+      "content": "t:content.padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "t:settings.top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 24
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "t:settings.bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 24
+    }
+  ],
+  "presets": [
+    {
+      "name": "Blog tag filter",
+      "blocks": {
+        "tile-1": { "type": "_blog-tag-tile", "settings": { "label": "Buyer's Guide", "tag": "buyers-guide" } },
+        "tile-2": { "type": "_blog-tag-tile", "settings": { "label": "Factory Tour", "tag": "factory-tour" } },
+        "tile-3": { "type": "_blog-tag-tile", "settings": { "label": "Adventure Travel", "tag": "adventure-travel" } },
+        "tile-4": { "type": "_blog-tag-tile", "settings": { "label": "Athletes / Creators", "tag": "athletes-creators" } },
+        "tile-5": { "type": "_blog-tag-tile", "settings": { "label": "Fitness / Nutrition", "tag": "fitness-nutrition" } },
+        "tile-6": { "type": "_blog-tag-tile", "settings": { "label": "Hard Goods", "tag": "hard-goods" } },
+        "tile-7": { "type": "_blog-tag-tile", "settings": { "label": "Topsheet Graphics", "tag": "graphics-inspiration" } },
+        "tile-8": { "type": "_blog-tag-tile", "settings": { "label": "Snow Safety", "tag": "snow-safety" } },
+        "tile-9": { "type": "_blog-tag-tile", "settings": { "label": "Skiing Podcast", "tag": "skiing-pod" } }
+      },
+      "block_order": ["tile-1", "tile-2", "tile-3", "tile-4", "tile-5", "tile-6", "tile-7", "tile-8", "tile-9"]
+    }
+  ]
+}
+{% endschema %}

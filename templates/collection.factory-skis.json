@@ -15,7 +15,7 @@
         "text_67LpVn": {
           "type": "text",
           "settings": {
-            "text": "<p>{{ closest.collection.title }}</p>",
+            "text": "<p>Wagner Quality<br/>without the wait.</p>",
             "width": "fit-content",
             "max_width": "narrow",
             "alignment": "left",
@@ -44,7 +44,7 @@
       "name": "t:names.hero",
       "settings": {
         "media_type_1": "image",
-        "image_1": "{{ collection.image }}",
+        "image_1": "shopify://shop_images/Looking_back_smaller.jpg",
         "media_type_2": "image",
         "stack_media_on_mobile": false,
         "custom_mobile_media": false,
@@ -77,6 +77,32 @@
     "section": {
       "type": "section",
       "blocks": {
+        "text_tqQTNE": {
+          "type": "text",
+          "name": "Title",
+          "settings": {
+            "text": "<h1>SEMI-CUSTOM Wagner Skis</h1>",
+            "width": "100%",
+            "max_width": "normal",
+            "alignment": "center",
+            "type_preset": "h2",
+            "font": "var(--font-primary--family)",
+            "font_size": "",
+            "line_height": "normal",
+            "letter_spacing": "normal",
+            "case": "none",
+            "wrap": "pretty",
+            "color": "",
+            "background": false,
+            "background_color": "#00000026",
+            "corner_radius": 0,
+            "padding-block-start": 0,
+            "padding-block-end": 0,
+            "padding-inline-start": 0,
+            "padding-inline-end": 0
+          },
+          "blocks": {}
+        },
         "text_twGGkJ": {
           "type": "text",
           "name": "Description",
@@ -105,6 +131,7 @@
         }
       },
       "block_order": [
+        "text_tqQTNE",
         "text_twGGkJ"
       ],
       "name": "Collection heading",
@@ -182,7 +209,7 @@
             "card-gallery": {
               "type": "_product-card-gallery",
               "settings": {
-                "image_ratio": "square",
+                "image_ratio": "portrait",
                 "border": "none",
                 "border_width": 1,
                 "border_opacity": 100,
@@ -219,36 +246,25 @@
               },
               "blocks": {}
             },
-            "swatches_CtYRn6": {
-              "type": "swatches",
-              "name": "t:names.swatches",
+            "text_bK6nEJ": {
+              "type": "text",
+              "name": "t:names.text",
               "settings": {
-                "product_swatches_alignment": "flex-start",
-                "product_swatches_alignment_mobile": "flex-start",
-                "hide_padding": false,
-                "product_swatches_padding_top": 4,
-                "product_swatches_padding_bottom": 0,
-                "product_swatches_padding_left": 0,
-                "product_swatches_padding_right": 0
-              },
-              "blocks": {}
-            },
-            "price_iQR9jA": {
-              "type": "price",
-              "name": "t:names.product_price",
-              "settings": {
-                "show_sale_price_first": true,
-                "show_installments": false,
-                "show_tax_info": false,
-                "type_preset": "",
-                "width": "100%",
+                "text": "{{ closest.product.metafields.custom.short_description | metafield_tag }}",
+                "width": "fit-content",
+                "max_width": "narrow",
                 "alignment": "left",
+                "type_preset": "custom",
                 "font": "var(--font-body--family)",
-                "font_size": "1rem",
+                "font_size": "0.875rem",
                 "line_height": "normal",
                 "letter_spacing": "normal",
                 "case": "none",
+                "wrap": "pretty",
                 "color": "var(--color-foreground)",
+                "background": false,
+                "background_color": "#00000026",
+                "corner_radius": 0,
                 "padding-block-start": 0,
                 "padding-block-end": 0,
                 "padding-inline-start": 0,
@@ -260,8 +276,7 @@
           "block_order": [
             "card-gallery",
             "product_title_4nY4eT",
-            "swatches_CtYRn6",
-            "price_iQR9jA"
+            "text_bK6nEJ"
           ]
         }
       },

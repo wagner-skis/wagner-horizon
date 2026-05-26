@@ -1,0 +1,60 @@
+{%- liquid
+  assign blog_url = closest.blog.url | default: '/blogs/journal'
+  assign tag_handle = block.settings.tag | handle
+  assign is_active = false
+  if current_tags contains block.settings.tag
+    assign is_active = true
+  endif
+-%}
+<a
+  class="blog-tag-tile{% if is_active %} blog-tag-tile--active{% endif %}"
+  href="{{ blog_url }}/tagged/{{ tag_handle }}"
+  {% if is_active %}aria-current="page"{% endif %}
+  {{ block.shopify_attributes }}
+>
+  <span class="blog-tag-tile__icon-wrap">
+    {%- if block.settings.image != blank -%}
+      {{
+        block.settings.image
+        | image_url: width: 300
+        | image_tag:
+          loading: 'lazy',
+          widths: '120,180,240,300',
+          sizes: 'var(--blog-tag-tile-size, 110px)',
+          class: 'blog-tag-tile__icon',
+          alt: block.settings.label
+      }}
+    {%- else -%}
+      {{ 'image' | placeholder_svg_tag: 'blog-tag-tile__icon placeholder-svg' }}
+    {%- endif -%}
+  </span>
+  {%- if block.settings.label != blank -%}
+    <span class="blog-tag-tile__label">{{ block.settings.label }}</span>
+  {%- endif -%}
+</a>
+
+{% schema %}
+{
+  "name": "Tag tile",
+  "tag": null,
+  "settings": [
+    {
+      "type": "text",
+      "id": "label",
+      "label": "Label",
+      "default": "Tag"
+    },
+    {
+      "type": "text",
+      "id": "tag",
+      "label": "Tag handle",
+      "info": "Use the exact tag handle from the article tag, e.g. buyers-guide"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Icon"
+    }
+  ]
+}
+{% endschema %}
