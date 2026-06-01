@@ -1,0 +1,960 @@
+{%- comment -%}
+  content_for 'blocks' must run before any section.blocks access
+  so Shopify populates the block array before our rendering loop.
+  The block files are schema-only and output nothing, so this div
+  is invisible on the live site and harmless in the editor.
+{%- endcomment -%}
+<div hidden aria-hidden="true">{% content_for 'blocks' %}</div>
+
+{%- liquid
+  assign selected_testimonials = section.settings.testimonials
+  assign columns     = section.settings.columns
+  assign columns_gap = section.settings.columns_gap
+  assign mobile_size = section.settings.mobile_card_size
+-%}
+
+{%- if selected_testimonials != blank and section.blocks.size > 0 -%}
+  {%- capture slides_html -%}
+    {%- assign is_first = true -%}
+    {%- for t in selected_testimonials -%}
+      {%- unless is_first -%}<!--@list/split-->{%- endunless -%}
+      {%- assign t_url = t.url -%}
+      <div class="resource-list__item">
+        <article class="testimonial-card">
+          {%- for block in section.blocks -%}
+            {%- render 'testimonial-field-block', block: block, t: t, t_url: t_url -%}
+          {%- endfor -%}
+        </article>
+      </div>
+      {%- assign is_first = false -%}
+    {%- endfor -%}
+  {%- endcapture -%}
+  {%- assign slides_array = slides_html | split: '<!--@list/split-->' -%}
+{%- endif -%}
+
+<div class="section-background color-{{ section.settings.color_scheme }}"></div>
+
+<div
+  class="
+    section
+    section--{{ section.settings.section_width }}
+    color-{{ section.settings.color_scheme }}
+    section-testimonials-carousel
+    spacing-style
+  "
+  style="{%- render 'spacing-style', settings: section.settings -%}"
+>
+  {%- if section.settings.eyebrow != blank or section.settings.heading != blank -%}
+    <div class="testimonials-carousel__header">
+      {%- if section.settings.eyebrow != blank -%}
+        <p class="wagner-eyebrow">{{ section.settings.eyebrow }}</p>
+      {%- endif -%}
+      {{ section.settings.heading }}
+    </div>
+  {%- endif -%}
+
+  {%- if slides_array != blank -%}
+    <div
+      class="resource-list resource-list__carousel force-full-width"
+      style="
+        --resource-list-column-gap-desktop: {{ columns_gap }}px;
+        --column-count: {{ columns }};
+        --column-count-mobile: 1;
+        --mobile-card-size: {{ mobile_size }};
+      "
+    >
+      {%- render 'resource-list-carousel',
+        ref: 'testimonialsCarousel',
+        slides: slides_array,
+        slide_count: slides_array.size,
+        settings: section.settings,
+        slide_width_max: '520px'
+      -%}
+    </div>
+  {%- elsif request.design_mode -%}
+    <p class="testimonials-carousel__empty">
+      {%- if selected_testimonials == blank -%}
+        Select testimonial entries in the section settings to display this carousel.
+      {%- else -%}
+        Add field blocks in the section sidebar to build the card layout.
+      {%- endif -%}
+    </p>
+  {%- endif -%}
+
+
+</div>
+
+{% stylesheet %}
+  .section-testimonials-carousel {
+    container-type: inline-size;
+  }
+
+  .testimonials-carousel__header {
+    padding-block-end: var(--padding-md, 20px);
+  }
+
+  .testimonials-carousel__empty {
+    font-size: 0.875rem;
+    color: rgb(var(--color-foreground) / 0.5);
+    font-style: italic;
+    padding: var(--padding-md, 20px) 0;
+  }
+
+  /* Card */
+  .testimonial-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  /* Product image */
+  .testimonial-card__product-image {
+    overflow: hidden;
+    aspect-ratio: var(--testimonial-aspect, 3 / 2);
+    margin-block-end: var(--padding-sm, 16px);
+  }
+
+  .testimonial-card__product-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--animation-speed-medium, 400ms) cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .testimonial-card__img-link {
+    display: block;
+    height: 100%;
+  }
+
+  .testimonial-card:hover .testimonial-card__product-image img {
+    transform: scale(1.04);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .testimonial-card__product-image img { transition: none; }
+  }
+
+  /* Pull quote */
+  .testimonial-card__quote {
+    margin: 0;
+    padding: 0;
+    line-height: 1.5;
+    color: rgb(var(--color-foreground));
+  }
+
+  .testimonial-card__quote--italic { font-style: italic; }
+
+  /* Attribution */
+  .testimonial-card__attribution {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-block-start: var(--padding-xs, 8px);
+    border-block-start: 1px solid rgb(var(--color-border) / 0.3);
+    margin-block-start: var(--margin-2xs, 8px);
+  }
+
+  .testimonial-card__client-name {
+    display: block;
+    font-family: var(--font-subheading--family, var(--font-body--family));
+    font-size: 0.6875rem;
+    letter-spacing: var(--wagner-eyebrow-tracking, 0.18em);
+    text-transform: uppercase;
+    font-weight: 600;
+    color: rgb(var(--color-foreground));
+    text-decoration: none;
+  }
+
+  .testimonial-card__role {
+    font-size: 0.8125rem;
+    color: rgb(var(--color-foreground) / 0.6);
+  }
+
+  /* Bio image */
+  .testimonial-card__bio-image-wrap {
+    display: inline-flex;
+    width: var(--bio-img-size, 48px);
+    height: var(--bio-img-size, 48px);
+    overflow: hidden;
+    margin-block-start: var(--margin-2xs, 8px);
+  }
+
+  .testimonial-card__bio-image-wrap--circle { border-radius: 50%; }
+  .testimonial-card__bio-image-wrap--square { border-radius: var(--style-border-radius-inputs, 0); }
+
+  .testimonial-card__bio-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Description */
+  .testimonial-card__description {
+    color: rgb(var(--color-foreground) / 0.7);
+    line-height: 1.5;
+    margin-block-start: var(--margin-2xs, 8px);
+  }
+
+  .testimonial-card__description p { margin: 0; }
+
+  /* Byline: bio image + attribution side by side */
+  .testimonial-card__byline {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--gap-xs, 12px);
+    margin-block-start: var(--margin-2xs, 8px);
+    padding-block-start: var(--padding-xs, 8px);
+    border-block-start: 1px solid rgb(var(--color-border) / 0.3);
+  }
+
+  .testimonial-card__byline > .testimonial-card__bio-image-wrap {
+    flex-shrink: 0;
+    margin-block-start: 0;
+  }
+
+  .testimonial-card__byline-text {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+{% endstylesheet %}
+
+{% schema %}
+{
+  "name": "Testimonials Carousel",
+  "tag": "section",
+  "disabled_on": {
+    "groups": ["header", "footer"]
+  },
+  "class": "testimonials-carousel-section",
+  "blocks": [
+    {
+      "type": "testimonial-prod-image",
+      "name": "Product image",
+      "settings": [
+        {
+          "type": "select",
+          "id": "aspect_ratio",
+          "label": "Aspect ratio",
+          "options": [
+            { "value": "3/2", "label": "3:2 landscape" },
+            { "value": "4/3", "label": "4:3 landscape" },
+            { "value": "1/1", "label": "1:1 square" },
+            { "value": "16/9", "label": "16:9 wide" }
+          ],
+          "default": "3/2"
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_link",
+          "label": "Link image to page",
+          "default": true,
+          "info": "Requires Online Store access enabled on the Testimonials metaobject."
+        }
+      ]
+    },
+    {
+      "type": "testimonial-quote",
+      "name": "Pull quote",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "italic",
+          "label": "Italic",
+          "default": true
+        },
+        {
+          "type": "header",
+          "content": "Typography"
+        },
+        {
+          "type": "select",
+          "id": "type_preset",
+          "label": "Preset",
+          "options": [
+            { "value": "rte", "label": "Default" },
+            { "value": "paragraph", "label": "Paragraph" },
+            { "value": "h1", "label": "H1" },
+            { "value": "h2", "label": "H2" },
+            { "value": "h3", "label": "H3" },
+            { "value": "h4", "label": "H4" },
+            { "value": "h5", "label": "H5" },
+            { "value": "h6", "label": "H6" },
+            { "value": "custom", "label": "Custom" }
+          ],
+          "default": "rte"
+        },
+        {
+          "type": "select",
+          "id": "font",
+          "label": "Font",
+          "options": [
+            { "value": "var(--font-body--family)", "label": "Body" },
+            { "value": "var(--font-subheading--family)", "label": "Subheading" },
+            { "value": "var(--font-heading--family)", "label": "Heading" },
+            { "value": "var(--font-accent--family)", "label": "Accent" }
+          ],
+          "default": "var(--font-body--family)",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "font_size",
+          "label": "Size",
+          "options": [
+            { "value": "", "label": "Default" },
+            { "value": "0.75rem", "label": "12px" },
+            { "value": "0.875rem", "label": "14px" },
+            { "value": "1rem", "label": "16px" },
+            { "value": "1.125rem", "label": "18px" },
+            { "value": "1.25rem", "label": "20px" },
+            { "value": "1.5rem", "label": "24px" },
+            { "value": "2rem", "label": "32px" },
+            { "value": "2.5rem", "label": "40px" },
+            { "value": "3rem", "label": "48px" }
+          ],
+          "default": "",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "line_height",
+          "label": "Line height",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "letter_spacing",
+          "label": "Letter spacing",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "case",
+          "label": "Case",
+          "options": [
+            { "value": "none", "label": "Default" },
+            { "value": "uppercase", "label": "Uppercase" }
+          ],
+          "default": "none",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "color",
+          "label": "Color",
+          "options": [
+            { "value": "var(--color-foreground)", "label": "Text" },
+            { "value": "var(--color-foreground-heading)", "label": "Heading" },
+            { "value": "var(--color-primary)", "label": "Link" }
+          ],
+          "default": "var(--color-foreground)",
+          "visible_if": "{{ block.settings.type_preset != 'rte' }}"
+        },
+        {
+          "type": "text_alignment",
+          "id": "alignment",
+          "label": "Alignment",
+          "default": "left"
+        }
+      ]
+    },
+    {
+      "type": "testimonial-attribution",
+      "name": "Attribution",
+      "settings": [
+        {
+          "type": "checkbox",
+          "id": "show_client_name",
+          "label": "Show client name",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_role",
+          "label": "Show title / role",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_link",
+          "label": "Link name to page",
+          "default": true,
+          "info": "Requires Online Store access enabled on the Testimonials metaobject."
+        },
+        {
+          "type": "header",
+          "content": "Typography"
+        },
+        {
+          "type": "select",
+          "id": "type_preset",
+          "label": "Preset",
+          "options": [
+            { "value": "rte", "label": "Default" },
+            { "value": "paragraph", "label": "Paragraph" },
+            { "value": "h1", "label": "H1" },
+            { "value": "h2", "label": "H2" },
+            { "value": "h3", "label": "H3" },
+            { "value": "h4", "label": "H4" },
+            { "value": "h5", "label": "H5" },
+            { "value": "h6", "label": "H6" },
+            { "value": "custom", "label": "Custom" }
+          ],
+          "default": "rte"
+        },
+        {
+          "type": "select",
+          "id": "font",
+          "label": "Font",
+          "options": [
+            { "value": "var(--font-body--family)", "label": "Body" },
+            { "value": "var(--font-subheading--family)", "label": "Subheading" },
+            { "value": "var(--font-heading--family)", "label": "Heading" },
+            { "value": "var(--font-accent--family)", "label": "Accent" }
+          ],
+          "default": "var(--font-body--family)",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "font_size",
+          "label": "Size",
+          "options": [
+            { "value": "", "label": "Default" },
+            { "value": "0.75rem", "label": "12px" },
+            { "value": "0.875rem", "label": "14px" },
+            { "value": "1rem", "label": "16px" },
+            { "value": "1.125rem", "label": "18px" },
+            { "value": "1.25rem", "label": "20px" },
+            { "value": "1.5rem", "label": "24px" },
+            { "value": "2rem", "label": "32px" },
+            { "value": "2.5rem", "label": "40px" },
+            { "value": "3rem", "label": "48px" }
+          ],
+          "default": "",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "line_height",
+          "label": "Line height",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "letter_spacing",
+          "label": "Letter spacing",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "case",
+          "label": "Case",
+          "options": [
+            { "value": "none", "label": "Default" },
+            { "value": "uppercase", "label": "Uppercase" }
+          ],
+          "default": "none",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "color",
+          "label": "Color",
+          "options": [
+            { "value": "var(--color-foreground)", "label": "Text" },
+            { "value": "var(--color-foreground-heading)", "label": "Heading" },
+            { "value": "var(--color-primary)", "label": "Link" }
+          ],
+          "default": "var(--color-foreground)",
+          "visible_if": "{{ block.settings.type_preset != 'rte' }}"
+        },
+        {
+          "type": "text_alignment",
+          "id": "alignment",
+          "label": "Alignment",
+          "default": "left"
+        }
+      ]
+    },
+    {
+      "type": "testimonial-bio-image",
+      "name": "Bio image",
+      "settings": [
+        {
+          "type": "range",
+          "id": "size",
+          "label": "Size",
+          "min": 32,
+          "max": 96,
+          "step": 4,
+          "unit": "px",
+          "default": 48
+        },
+        {
+          "type": "select",
+          "id": "shape",
+          "label": "Shape",
+          "options": [
+            { "value": "circle", "label": "Circle" },
+            { "value": "square", "label": "Square" }
+          ],
+          "default": "circle"
+        }
+      ]
+    },
+    {
+      "type": "testimonial-description",
+      "name": "Description",
+      "settings": [
+        {
+          "type": "select",
+          "id": "type_preset",
+          "label": "Preset",
+          "options": [
+            { "value": "rte", "label": "Default" },
+            { "value": "paragraph", "label": "Paragraph" },
+            { "value": "h1", "label": "H1" },
+            { "value": "h2", "label": "H2" },
+            { "value": "h3", "label": "H3" },
+            { "value": "h4", "label": "H4" },
+            { "value": "h5", "label": "H5" },
+            { "value": "h6", "label": "H6" },
+            { "value": "custom", "label": "Custom" }
+          ],
+          "default": "rte"
+        },
+        {
+          "type": "select",
+          "id": "font",
+          "label": "Font",
+          "options": [
+            { "value": "var(--font-body--family)", "label": "Body" },
+            { "value": "var(--font-subheading--family)", "label": "Subheading" },
+            { "value": "var(--font-heading--family)", "label": "Heading" },
+            { "value": "var(--font-accent--family)", "label": "Accent" }
+          ],
+          "default": "var(--font-body--family)",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "font_size",
+          "label": "Size",
+          "options": [
+            { "value": "", "label": "Default" },
+            { "value": "0.75rem", "label": "12px" },
+            { "value": "0.875rem", "label": "14px" },
+            { "value": "1rem", "label": "16px" },
+            { "value": "1.125rem", "label": "18px" },
+            { "value": "1.25rem", "label": "20px" },
+            { "value": "1.5rem", "label": "24px" },
+            { "value": "2rem", "label": "32px" },
+            { "value": "2.5rem", "label": "40px" },
+            { "value": "3rem", "label": "48px" }
+          ],
+          "default": "",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "line_height",
+          "label": "Line height",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "letter_spacing",
+          "label": "Letter spacing",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "case",
+          "label": "Case",
+          "options": [
+            { "value": "none", "label": "Default" },
+            { "value": "uppercase", "label": "Uppercase" }
+          ],
+          "default": "none",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "color",
+          "label": "Color",
+          "options": [
+            { "value": "var(--color-foreground)", "label": "Text" },
+            { "value": "var(--color-foreground-heading)", "label": "Heading" },
+            { "value": "var(--color-primary)", "label": "Link" }
+          ],
+          "default": "var(--color-foreground)",
+          "visible_if": "{{ block.settings.type_preset != 'rte' }}"
+        },
+        {
+          "type": "text_alignment",
+          "id": "alignment",
+          "default": "left",
+          "label": "Alignment"
+        }
+      ]
+    },
+    {
+      "type": "testimonial-byline",
+      "name": "Byline",
+      "settings": [
+        {
+          "type": "header",
+          "content": "Bio image"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_bio_image",
+          "label": "Show bio image",
+          "default": true
+        },
+        {
+          "type": "range",
+          "id": "bio_size",
+          "label": "Size",
+          "min": 32,
+          "max": 96,
+          "step": 4,
+          "unit": "px",
+          "default": 48
+        },
+        {
+          "type": "select",
+          "id": "bio_shape",
+          "label": "Shape",
+          "options": [
+            { "value": "circle", "label": "Circle" },
+            { "value": "square", "label": "Square" }
+          ],
+          "default": "circle"
+        },
+        {
+          "type": "header",
+          "content": "Attribution"
+        },
+        {
+          "type": "checkbox",
+          "id": "show_client_name",
+          "label": "Show client name",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "show_role",
+          "label": "Show title / role",
+          "default": true
+        },
+        {
+          "type": "checkbox",
+          "id": "enable_link",
+          "label": "Link name to page",
+          "default": true,
+          "info": "Requires Online Store access enabled on the Testimonials metaobject."
+        },
+        {
+          "type": "header",
+          "content": "Typography"
+        },
+        {
+          "type": "select",
+          "id": "type_preset",
+          "label": "Preset",
+          "options": [
+            { "value": "rte", "label": "Default" },
+            { "value": "paragraph", "label": "Paragraph" },
+            { "value": "h1", "label": "H1" },
+            { "value": "h2", "label": "H2" },
+            { "value": "h3", "label": "H3" },
+            { "value": "h4", "label": "H4" },
+            { "value": "h5", "label": "H5" },
+            { "value": "h6", "label": "H6" },
+            { "value": "custom", "label": "Custom" }
+          ],
+          "default": "rte"
+        },
+        {
+          "type": "select",
+          "id": "font",
+          "label": "Font",
+          "options": [
+            { "value": "var(--font-body--family)", "label": "Body" },
+            { "value": "var(--font-subheading--family)", "label": "Subheading" },
+            { "value": "var(--font-heading--family)", "label": "Heading" },
+            { "value": "var(--font-accent--family)", "label": "Accent" }
+          ],
+          "default": "var(--font-body--family)",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "font_size",
+          "label": "Size",
+          "options": [
+            { "value": "", "label": "Default" },
+            { "value": "0.75rem", "label": "12px" },
+            { "value": "0.875rem", "label": "14px" },
+            { "value": "1rem", "label": "16px" },
+            { "value": "1.125rem", "label": "18px" },
+            { "value": "1.25rem", "label": "20px" },
+            { "value": "1.5rem", "label": "24px" },
+            { "value": "2rem", "label": "32px" },
+            { "value": "2.5rem", "label": "40px" },
+            { "value": "3rem", "label": "48px" }
+          ],
+          "default": "",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "line_height",
+          "label": "Line height",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "letter_spacing",
+          "label": "Letter spacing",
+          "options": [
+            { "value": "tight", "label": "Tight" },
+            { "value": "normal", "label": "Normal" },
+            { "value": "loose", "label": "Loose" }
+          ],
+          "default": "normal",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "case",
+          "label": "Case",
+          "options": [
+            { "value": "none", "label": "Default" },
+            { "value": "uppercase", "label": "Uppercase" }
+          ],
+          "default": "none",
+          "visible_if": "{{ block.settings.type_preset == 'custom' }}"
+        },
+        {
+          "type": "select",
+          "id": "color",
+          "label": "Color",
+          "options": [
+            { "value": "var(--color-foreground)", "label": "Text" },
+            { "value": "var(--color-foreground-heading)", "label": "Heading" },
+            { "value": "var(--color-primary)", "label": "Link" }
+          ],
+          "default": "var(--color-foreground)",
+          "visible_if": "{{ block.settings.type_preset != 'rte' }}"
+        },
+        {
+          "type": "text_alignment",
+          "id": "alignment",
+          "label": "Alignment",
+          "default": "left"
+        }
+      ]
+    }
+  ],
+  "settings": [
+    {
+      "type": "header",
+      "content": "Testimonials"
+    },
+    {
+      "type": "metaobject_list",
+      "id": "testimonials",
+      "label": "Testimonial entries",
+      "metaobject_type": "testimonials"
+    },
+    {
+      "type": "header",
+      "content": "Section header"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "eyebrow",
+      "label": "Eyebrow",
+      "default": "Customer Stories"
+    },
+    {
+      "type": "richtext",
+      "id": "heading",
+      "label": "Heading",
+      "default": "<h2>What Our Customers Say</h2>"
+    },
+    {
+      "type": "header",
+      "content": "Carousel"
+    },
+    {
+      "type": "range",
+      "id": "columns",
+      "label": "Columns",
+      "min": 1,
+      "max": 6,
+      "step": 1,
+      "default": 3
+    },
+    {
+      "type": "select",
+      "id": "mobile_card_size",
+      "label": "Mobile card size",
+      "options": [
+        { "value": "60cqw", "label": "1 card" },
+        { "value": "44cqw", "label": "2 cards" }
+      ],
+      "default": "60cqw"
+    },
+    {
+      "type": "range",
+      "id": "columns_gap",
+      "label": "Gap",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "select",
+      "id": "icons_style",
+      "label": "Arrow style",
+      "options": [
+        { "value": "arrow", "label": "Arrow" },
+        { "value": "chevron", "label": "Chevron" },
+        { "value": "arrows_large", "label": "Arrow large" },
+        { "value": "chevron_large", "label": "Chevron large" },
+        { "value": "none", "label": "None" }
+      ],
+      "default": "arrow"
+    },
+    {
+      "type": "select",
+      "id": "icons_shape",
+      "label": "Arrow background",
+      "options": [
+        { "value": "none", "label": "None" },
+        { "value": "circle", "label": "Circle" },
+        { "value": "square", "label": "Square" }
+      ],
+      "default": "circle",
+      "visible_if": "{{ section.settings.icons_style != 'none' }}"
+    },
+    {
+      "type": "header",
+      "content": "Layout"
+    },
+    {
+      "type": "select",
+      "id": "section_width",
+      "label": "Width",
+      "options": [
+        { "value": "page-width", "label": "Page" },
+        { "value": "full-width", "label": "Full" }
+      ],
+      "default": "page-width"
+    },
+    {
+      "type": "color_scheme",
+      "id": "color_scheme",
+      "label": "Color scheme",
+      "default": "scheme-1"
+    },
+    {
+      "type": "header",
+      "content": "Padding"
+    },
+    {
+      "type": "range",
+      "id": "padding-block-start",
+      "label": "Top",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 48
+    },
+    {
+      "type": "range",
+      "id": "padding-block-end",
+      "label": "Bottom",
+      "min": 0,
+      "max": 100,
+      "step": 1,
+      "unit": "px",
+      "default": 48
+    }
+  ],
+  "presets": [
+    {
+      "name": "Testimonials Carousel",
+      "category": "Wagner",
+      "settings": {
+        "columns": 3,
+        "columns_gap": 16,
+        "icons_style": "arrow",
+        "icons_shape": "circle",
+        "padding-block-start": 48,
+        "padding-block-end": 48
+      },
+      "blocks": {
+        "product-image": { "type": "testimonial-prod-image" },
+        "quote": { "type": "testimonial-quote" },
+        "attribution": { "type": "testimonial-attribution" }
+      },
+      "block_order": ["product-image", "quote", "attribution"]
+    }
+  ]
+}
+{% endschema %}

@@ -1,0 +1,182 @@
+{%- comment -%}
+  Renders a single testimonial field block.
+  Params: block, t (metaobject entry), t_url (storefront URL string)
+{%- endcomment -%}
+{%- case block.type -%}
+
+  {%- when 'testimonial-prod-image' -%}
+    {%- assign product_image = t.product_image.value -%}
+    {%- if product_image != blank -%}
+      {%- assign img_link = false -%}
+      {%- if block.settings.enable_link and t_url != blank -%}
+        {%- assign img_link = true -%}
+      {%- endif -%}
+      <div
+        class="testimonial-card__product-image"
+        style="--testimonial-aspect: {{ block.settings.aspect_ratio }};"
+        {{ block.shopify_attributes }}
+      >
+        {%- if img_link -%}<a href="{{ t_url }}" class="testimonial-card__img-link">{%- endif -%}
+        {{- product_image | image_url: width: 800 | image_tag:
+          loading: 'lazy',
+          widths: '400, 800',
+          alt: t.client_name.value
+        -}}
+        {%- if img_link -%}</a>{%- endif -%}
+      </div>
+    {%- endif -%}
+
+  {%- when 'testimonial-quote' -%}
+    {%- if t.short_description.value != blank -%}
+      {%- liquid
+        assign q_preset = block.settings.type_preset | default: 'rte'
+        assign q_classes = 'testimonial-card__quote text-block text-block--' | append: block.id | append: ' ' | append: q_preset
+        if block.settings.italic
+          assign q_classes = q_classes | append: ' testimonial-card__quote--italic'
+        endif
+        if q_preset == 'custom'
+          assign q_classes = q_classes | append: ' custom-typography'
+          if block.settings.color != ''
+            assign q_classes = q_classes | append: ' custom-color'
+          endif
+        endif
+        if q_preset == 'rte' or q_preset == 'paragraph'
+          assign q_classes = q_classes | append: ' rte'
+        endif
+      -%}
+      <blockquote
+        class="{{ q_classes }}"
+        style="{% render 'typography-style', settings: block.settings %}"
+        {{ block.shopify_attributes }}
+      >
+        {{- t.short_description | metafield_tag -}}
+      </blockquote>
+    {%- endif -%}
+
+  {%- when 'testimonial-attribution' -%}
+    {%- liquid
+      assign attr_link = false
+      if block.settings.enable_link and t_url != blank
+        assign attr_link = true
+      endif
+      assign a_preset = block.settings.type_preset | default: 'rte'
+      assign a_classes = 'testimonial-card__attribution text-block text-block--' | append: block.id | append: ' ' | append: a_preset
+      if a_preset == 'custom'
+        assign a_classes = a_classes | append: ' custom-typography'
+        if block.settings.color != ''
+          assign a_classes = a_classes | append: ' custom-color'
+        endif
+      endif
+    -%}
+    <footer
+      class="{{ a_classes }}"
+      style="{% render 'typography-style', settings: block.settings %}"
+      {{ block.shopify_attributes }}
+    >
+      {%- if block.settings.show_client_name and t.client_name.value != blank -%}
+        {%- if attr_link -%}
+          <a href="{{ t_url }}" class="testimonial-card__client-name wagner-link">
+            {{- t.client_name.value -}}
+          </a>
+        {%- else -%}
+          <span class="testimonial-card__client-name">{{- t.client_name.value -}}</span>
+        {%- endif -%}
+      {%- endif -%}
+      {%- if block.settings.show_role and t.title.value != blank -%}
+        <span class="testimonial-card__role">{{- t.title.value -}}</span>
+      {%- endif -%}
+    </footer>
+
+  {%- when 'testimonial-bio-image' -%}
+    {%- assign bio_image = t.bio_image.value -%}
+    {%- if bio_image != blank -%}
+      <div
+        class="testimonial-card__bio-image-wrap testimonial-card__bio-image-wrap--{{ block.settings.shape }}"
+        style="--bio-img-size: {{ block.settings.size }}px;"
+        {{ block.shopify_attributes }}
+      >
+        {{- bio_image | image_url: width: 120 | image_tag:
+          loading: 'lazy',
+          widths: '60, 120',
+          class: 'testimonial-card__bio-image',
+          alt: t.client_name.value
+        -}}
+      </div>
+    {%- endif -%}
+
+  {%- when 'testimonial-description' -%}
+    {%- if t.description.value != blank -%}
+      {%- liquid
+        assign d_preset = block.settings.type_preset | default: 'rte'
+        assign d_classes = 'testimonial-card__description text-block text-block--' | append: block.id | append: ' ' | append: d_preset
+        if d_preset == 'custom'
+          assign d_classes = d_classes | append: ' custom-typography'
+          if block.settings.color != ''
+            assign d_classes = d_classes | append: ' custom-color'
+          endif
+        endif
+        if d_preset == 'rte' or d_preset == 'paragraph'
+          assign d_classes = d_classes | append: ' rte'
+        endif
+      -%}
+      <div
+        class="{{ d_classes }}"
+        style="{% render 'typography-style', settings: block.settings %}"
+        {{ block.shopify_attributes }}
+      >
+        {{- t.description | metafield_tag -}}
+      </div>
+    {%- endif -%}
+
+  {%- when 'testimonial-byline' -%}
+    {%- liquid
+      assign byline_link = false
+      if block.settings.enable_link and t_url != blank
+        assign byline_link = true
+      endif
+      assign bl_preset = block.settings.type_preset | default: 'rte'
+      assign bl_classes = 'testimonial-card__byline-text text-block text-block--' | append: block.id | append: ' ' | append: bl_preset
+      if bl_preset == 'custom'
+        assign bl_classes = bl_classes | append: ' custom-typography'
+        if block.settings.color != ''
+          assign bl_classes = bl_classes | append: ' custom-color'
+        endif
+      endif
+    -%}
+    <div class="testimonial-card__byline" {{ block.shopify_attributes }}>
+      {%- if block.settings.show_bio_image -%}
+        {%- assign bio_image = t.bio_image.value -%}
+        {%- if bio_image != blank -%}
+          <div
+            class="testimonial-card__bio-image-wrap testimonial-card__bio-image-wrap--{{ block.settings.bio_shape }}"
+            style="--bio-img-size: {{ block.settings.bio_size }}px;"
+          >
+            {{- bio_image | image_url: width: 120 | image_tag:
+              loading: 'lazy',
+              widths: '60, 120',
+              class: 'testimonial-card__bio-image',
+              alt: t.client_name.value
+            -}}
+          </div>
+        {%- endif -%}
+      {%- endif -%}
+      <div
+        class="{{ bl_classes }}"
+        style="{% render 'typography-style', settings: block.settings %}"
+      >
+        {%- if block.settings.show_client_name and t.client_name.value != blank -%}
+          {%- if byline_link -%}
+            <a href="{{ t_url }}" class="testimonial-card__client-name wagner-link">
+              {{- t.client_name.value -}}
+            </a>
+          {%- else -%}
+            <span class="testimonial-card__client-name">{{- t.client_name.value -}}</span>
+          {%- endif -%}
+        {%- endif -%}
+        {%- if block.settings.show_role and t.title.value != blank -%}
+          <span class="testimonial-card__role">{{- t.title.value -}}</span>
+        {%- endif -%}
+      </div>
+    </div>
+
+{%- endcase -%}

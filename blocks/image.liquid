@@ -14,10 +14,15 @@
   if ratio == 0 or ratio == null
     assign ratio = 1
   endif
+
+  assign has_overlay = false
+  if block_settings.toggle_overlay or block_settings.enable_text_overlay
+    assign has_overlay = true
+  endif
 %}
 
 {% capture class %}
-  image-block image-block--{{ block.id }} image-block--height-{{ block_settings.height }} spacing-style size-style
+  image-block image-block--{{ block.id }} image-block--height-{{ block_settings.height }} spacing-style size-style{% if has_overlay %} image-block--has-overlay{% endif %}
 {% endcapture %}
 
 {% capture style %}
@@ -54,6 +59,28 @@
   {%- else -%}
     <div class="placeholder-image border-style size-style" style="{{ image_border_style }}">
       {{ 'detailed-apparel-1' | placeholder_svg_tag: 'hero__media' }}
+    </div>
+  {%- endif -%}
+  {%- if block_settings.toggle_overlay -%}
+    {% render 'overlay', settings: block_settings %}
+  {%- endif -%}
+  {%- if block_settings.enable_text_overlay -%}
+    <div
+      class="image-block__text-overlay{% if block_settings.overlay_visibility == 'on_hover' %} image-block__text-overlay--on-hover{% endif %}"
+      style="
+        --text-overlay-x: {{ block_settings.overlay_x_position | default: 'flex-start' }};
+        --text-overlay-y: {{ block_settings.overlay_y_position | default: 'flex-end' }};
+        --color: {{ block_settings.overlay_text_color | default: '#ffffff' }};
+        --text-overlay-align: {{ block_settings.overlay_text_alignment | default: 'left' }};
+      "
+    >
+      {%- if block_settings.overlay_heading != blank -%}
+        {%- assign heading_style = block_settings.overlay_heading_style | default: 'h2' -%}
+        <p class="image-block__overlay-heading {{ heading_style }} {{ heading_style }}">{{ block_settings.overlay_heading }}</p>
+      {%- endif -%}
+      {%- if block_settings.overlay_subtext != blank -%}
+        <p class="image-block__overlay-subtext paragraph">{{ block_settings.overlay_subtext }}</p>
+      {%- endif -%}
     </div>
   {%- endif -%}
 {% endcapture %}
@@ -99,6 +126,54 @@
     object-fit: cover;
     aspect-ratio: var(--ratio);
   }
+
+  .image-block--has-overlay {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .image-block--has-overlay .image-block__image,
+  .image-block--has-overlay .placeholder-image {
+    width: 100%;
+  }
+
+  .image-block__text-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: var(--layer-raised);
+    display: flex;
+    flex-direction: column;
+    align-items: var(--text-overlay-x, flex-start);
+    justify-content: var(--text-overlay-y, flex-end);
+    padding: var(--padding-md, 1.5rem);
+    pointer-events: none;
+    text-align: var(--text-overlay-align, left);
+  }
+
+  .image-block__text-overlay--on-hover {
+    opacity: 0;
+    transition: opacity var(--animation-speed, 300ms) var(--animation-easing, ease);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .image-block__text-overlay--on-hover {
+      transition: none;
+    }
+  }
+
+  .image-block--has-overlay:hover .image-block__text-overlay--on-hover,
+  .image-block--has-overlay:focus-within .image-block__text-overlay--on-hover {
+    opacity: 1;
+  }
+
+  .image-block__overlay-heading {
+    margin: 0;
+  }
+
+  .image-block__overlay-subtext {
+    margin-block-start: var(--margin-2xs, 0.5rem);
+    margin-block-end: 0;
+  }
 {% endstylesheet %}
 
 {% schema %}
@@ -115,6 +190,189 @@
       "type": "url",
       "id": "link",
       "label": "t:settings.link"
+    },
+    {
+      "type": "header",
+      "content": "t:content.text_overlay"
+    },
+    {
+      "type": "checkbox",
+      "id": "enable_text_overlay",
+      "label": "t:settings.enable_text_overlay",
+      "default": false
+    },
+    {
+      "type": "inline_richtext",
+      "id": "overlay_heading",
+      "label": "t:settings.heading",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "overlay_subtext",
+      "label": "t:settings.subtext",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "select",
+      "id": "overlay_heading_style",
+      "label": "t:settings.preset",
+      "options": [
+        {
+          "value": "h1",
+          "label": "t:options.h1"
+        },
+        {
+          "value": "h2",
+          "label": "t:options.h2"
+        },
+        {
+          "value": "h3",
+          "label": "t:options.h3"
+        },
+        {
+          "value": "h4",
+          "label": "t:options.h4"
+        },
+        {
+          "value": "h5",
+          "label": "t:options.h5"
+        },
+        {
+          "value": "h6",
+          "label": "t:options.h6"
+        },
+        {
+          "value": "paragraph",
+          "label": "t:options.paragraph"
+        }
+      ],
+      "default": "h2",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "color",
+      "id": "overlay_text_color",
+      "label": "t:settings.color",
+      "default": "#ffffff",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "text_alignment",
+      "id": "overlay_text_alignment",
+      "label": "t:settings.alignment",
+      "default": "left",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "select",
+      "id": "overlay_x_position",
+      "label": "t:settings.x_position",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "t:options.left"
+        },
+        {
+          "value": "center",
+          "label": "t:options.center"
+        },
+        {
+          "value": "flex-end",
+          "label": "t:options.right"
+        }
+      ],
+      "default": "flex-start",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "select",
+      "id": "overlay_y_position",
+      "label": "t:settings.y_position",
+      "options": [
+        {
+          "value": "flex-start",
+          "label": "t:options.top"
+        },
+        {
+          "value": "center",
+          "label": "t:options.center"
+        },
+        {
+          "value": "flex-end",
+          "label": "t:options.bottom"
+        }
+      ],
+      "default": "flex-end",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "select",
+      "id": "overlay_visibility",
+      "label": "t:settings.visibility",
+      "options": [
+        {
+          "value": "always",
+          "label": "t:options.always"
+        },
+        {
+          "value": "on_hover",
+          "label": "t:options.on_hover"
+        }
+      ],
+      "default": "always",
+      "visible_if": "{{ block.settings.enable_text_overlay }}"
+    },
+    {
+      "type": "header",
+      "content": "t:content.appearance"
+    },
+    {
+      "type": "checkbox",
+      "id": "toggle_overlay",
+      "label": "t:settings.media_overlay"
+    },
+    {
+      "type": "color",
+      "id": "overlay_color",
+      "label": "t:settings.overlay_color",
+      "alpha": true,
+      "default": "#00000026",
+      "visible_if": "{{ block.settings.toggle_overlay }}"
+    },
+    {
+      "type": "select",
+      "id": "overlay_style",
+      "label": "t:settings.overlay_style",
+      "options": [
+        {
+          "value": "solid",
+          "label": "t:options.solid"
+        },
+        {
+          "value": "gradient",
+          "label": "t:options.gradient"
+        }
+      ],
+      "default": "solid",
+      "visible_if": "{{ block.settings.toggle_overlay }}"
+    },
+    {
+      "type": "select",
+      "id": "gradient_direction",
+      "label": "t:settings.gradient_direction",
+      "options": [
+        {
+          "value": "to top",
+          "label": "t:options.up"
+        },
+        {
+          "value": "to bottom",
+          "label": "t:options.down"
+        }
+      ],
+      "default": "to top",
+      "visible_if": "{{ block.settings.toggle_overlay and block.settings.overlay_style == 'gradient' }}"
     },
     {
       "type": "header",

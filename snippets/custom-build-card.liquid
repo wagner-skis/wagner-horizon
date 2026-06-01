@@ -1,0 +1,40 @@
+{%- doc -%}
+  Renders a single custom build card from a custom_builds metaobject entry.
+
+  @param {object} build - The custom_builds metaobject entry from block.settings.custom_build
+{%- enddoc -%}
+{%- if build != blank -%}
+  {%- assign build_image = build.image.value -%}
+
+  <article class="custom-build-card">
+    {%- if build_image != blank -%}
+      <div class="custom-build-card__media">
+        {{- build_image | image_url: width: 600 | image_tag:
+          loading: 'lazy',
+          widths: '300, 600',
+          alt: build.title.value
+        -}}
+      </div>
+    {%- endif -%}
+
+    <div class="custom-build-card__info">
+      {%- if build.ski_title.value != blank -%}
+        <p class="custom-build-card__title">{{- build.ski_title.value -}}</p>
+      {%- endif -%}
+
+      {%- if build.length.value != blank and build.width.value != blank -%}
+        <p class="custom-build-card__dimensions">
+          {{- build.length.value -}}&thinsp;cm &times; {{- build.width.value -}}&thinsp;cm
+        </p>
+      {%- endif -%}
+
+      {%- if build.core_material.value != blank -%}
+        <p class="custom-build-card__material">{{- build.core_material.value -}}</p>
+      {%- endif -%}
+
+      {%- if build.price.value != blank -%}
+        <p class="custom-build-card__price">{{- build.price.value | money -}}</p>
+      {%- endif -%}
+    </div>
+  </article>
+{%- endif -%}

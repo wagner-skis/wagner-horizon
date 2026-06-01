@@ -1,0 +1,15 @@
+{% render 'custom-build-card', build: block.settings.custom_build %}
+
+{% schema %}
+{
+  "name": "t:names.custom_build",
+  "settings": [
+    {
+      "type": "metaobject",
+      "id": "custom_build",
+      "label": "t:settings.custom_build",
+      "metaobject_type": "custom_builds"
+    }
+  ]
+}
+{% endschema %}
