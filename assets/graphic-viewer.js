@@ -61,6 +61,7 @@ class GraphicViewer extends Component {
     const gridPanel = this.refs.gridPanel;
     if (viewerPanel) viewerPanel.hidden = newMode !== 'viewer';
     if (gridPanel) gridPanel.hidden = newMode !== 'grid';
+    this.classList.toggle('graphic-viewer--grid-mode', newMode === 'grid');
   }
 
   // ─── Private methods ─────────────────────────────────────────
