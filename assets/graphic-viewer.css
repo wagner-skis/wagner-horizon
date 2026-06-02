@@ -1,0 +1,482 @@
+/* ─── Custom properties ─────────────────────────────────────── */
+.graphic-viewer {
+  --gv-charcoal: #1a1a1a;
+  --gv-white: #ffffff;
+  --gv-blue: #0066cc;
+  --gv-blue-hover: #0055aa;
+  --gv-surface: #111111;
+  --gv-surface-2: #222222;
+  --gv-border: rgba(255, 255, 255, 0.1);
+  --gv-text-muted: rgba(255, 255, 255, 0.5);
+  --gv-ski-width: 72px;
+  --gv-ski-height: 576px;
+  --gv-sidebar-width: 280px;
+}
+
+/* ─── Root ──────────────────────────────────────────────────── */
+.graphic-viewer {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  max-height: 100vh;
+  background: var(--gv-charcoal);
+  color: var(--gv-white);
+  position: relative;
+  overflow: hidden;
+}
+
+/* ─── Toolbar ───────────────────────────────────────────────── */
+.graphic-viewer__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 10px 16px;
+  gap: 4px;
+  border-bottom: 1px solid var(--gv-border);
+}
+
+.graphic-viewer__mode-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--gv-text-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color 200ms ease, background 200ms ease, border-color 200ms ease;
+}
+
+.graphic-viewer__mode-btn[aria-pressed="true"] {
+  background: var(--gv-surface-2);
+  border-color: var(--gv-border);
+  color: var(--gv-white);
+}
+
+.graphic-viewer__mode-btn:hover {
+  color: var(--gv-white);
+}
+
+.graphic-viewer__mode-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* ─── Viewer panel ──────────────────────────────────────────── */
+.graphic-viewer__viewer-panel {
+  display: flex;
+  flex-direction: row;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ─── Sidebar ───────────────────────────────────────────────── */
+.graphic-viewer__sidebar {
+  width: var(--gv-sidebar-width);
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--gv-border);
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Filter row */
+.graphic-viewer__filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 14px 12px;
+  border-bottom: 1px solid var(--gv-border);
+}
+
+.graphic-viewer__tier-btn {
+  padding: 5px 12px;
+  border: 1px solid var(--gv-border);
+  border-radius: 100px;
+  background: transparent;
+  color: var(--gv-text-muted);
+  font-family: var(--font-heading--family);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 200ms ease, background 200ms ease, border-color 200ms ease;
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.graphic-viewer__tier-btn[aria-pressed="true"] {
+  background: var(--gv-white);
+  border-color: var(--gv-white);
+  color: var(--gv-charcoal);
+}
+
+.graphic-viewer__tier-btn:hover:not([aria-pressed="true"]) {
+  color: var(--gv-white);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Thumbnail grid */
+.graphic-viewer__thumb-list {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.graphic-viewer__thumb-list::-webkit-scrollbar {
+  width: 4px;
+}
+
+.graphic-viewer__thumb-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.graphic-viewer__thumb {
+  width: 100%;
+  height: 80px;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background: var(--gv-surface-2);
+  cursor: pointer;
+  padding: 0;
+  flex-shrink: 0;
+  transition: border-color 200ms ease;
+}
+
+.graphic-viewer__thumb[aria-pressed="true"] {
+  border-color: var(--gv-blue);
+}
+
+.graphic-viewer__thumb:hover:not([aria-pressed="true"]) {
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.graphic-viewer__thumb[hidden] {
+  display: none;
+}
+
+.graphic-viewer__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ─── Stage area ────────────────────────────────────────────── */
+.graphic-viewer__stage-area {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 28px 32px 24px;
+  gap: 20px;
+  overflow: hidden;
+}
+
+/* Metadata */
+.graphic-viewer__metadata {
+  text-align: center;
+  min-height: 3.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.graphic-viewer__metadata-series {
+  display: block;
+  font-family: var(--font-heading--family);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: var(--wagner-eyebrow-tracking, 0.18em);
+  text-transform: uppercase;
+  color: var(--gv-blue);
+}
+
+.graphic-viewer__metadata-name {
+  display: block;
+  font-family: var(--font-heading--family);
+  font-size: clamp(1rem, 2vw, 1.5rem);
+  font-weight: var(--font-heading--weight, 700);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gv-white);
+  line-height: 1.15;
+}
+
+/* Stage (ski pair) */
+.graphic-viewer__stage {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  padding: 8px 0;
+  min-height: 0;
+}
+
+/* Single ski shape */
+.graphic-viewer__ski {
+  width: var(--gv-ski-width);
+  height: var(--gv-ski-height);
+  position: relative;
+  flex-shrink: 0;
+  clip-path: polygon(
+    50% 0%,
+    58% 1%, 66% 3%, 72% 6%, 76% 9%,
+    78% 13%, 76% 20%, 72% 30%, 68% 40%,
+    65% 48%, 65% 52%,
+    68% 60%, 72% 70%, 76% 80%, 78% 87%,
+    76% 92%, 72% 96%, 64% 99%,
+    50% 100%,
+    36% 99%, 28% 96%, 24% 92%,
+    22% 87%, 24% 80%, 28% 70%, 32% 60%,
+    35% 52%, 35% 48%,
+    32% 40%, 28% 30%, 24% 20%, 22% 13%,
+    24% 9%, 28% 6%, 34% 3%, 42% 1%
+  );
+}
+
+.graphic-viewer__ski--left {
+  transform: rotate(-2deg);
+  transform-origin: center bottom;
+}
+
+.graphic-viewer__ski--right {
+  transform: rotate(2deg);
+  transform-origin: center bottom;
+}
+
+.graphic-viewer__ski-base {
+  position: absolute;
+  inset: 0;
+  background: #f2f2f2;
+}
+
+/* Graphic image layers — A/B cross-fade */
+.graphic-viewer__ski-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: top center;
+  background-repeat: no-repeat;
+  transition: opacity 0.35s ease;
+}
+
+.graphic-viewer__ski-layer[data-layer="b"] {
+  opacity: 0;
+}
+
+/* Suppress transitions on initial load */
+.graphic-viewer--init .graphic-viewer__ski-layer {
+  transition: none;
+}
+
+/* Info strip */
+.graphic-viewer__info-strip {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 18px;
+  border-top: 1px solid var(--gv-border);
+  flex-wrap: wrap;
+}
+
+.graphic-viewer__msrp {
+  font-family: var(--font-heading--family);
+}
+
+.graphic-viewer__msrp-label {
+  display: block;
+  font-size: 0.6rem;
+  font-weight: 600;
+  letter-spacing: var(--wagner-eyebrow-tracking, 0.18em);
+  text-transform: uppercase;
+  color: var(--gv-text-muted);
+  margin-bottom: 3px;
+}
+
+.graphic-viewer__msrp-value {
+  display: block;
+  font-size: 1.125rem;
+  font-weight: var(--font-heading--weight, 700);
+  color: var(--gv-white);
+}
+
+.graphic-viewer__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* CTA buttons — fully overridden for dark context */
+.graphic-viewer__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  border-radius: var(--style-border-radius-buttons, 0);
+  font-family: var(--font-heading--family);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 200ms ease, border-color 200ms ease, color 200ms ease;
+}
+
+.graphic-viewer__cta--primary {
+  background: var(--gv-blue);
+  border: 1px solid var(--gv-blue);
+  color: var(--gv-white);
+}
+
+.graphic-viewer__cta--primary:hover {
+  background: var(--gv-blue-hover);
+  border-color: var(--gv-blue-hover);
+  color: var(--gv-white);
+}
+
+.graphic-viewer__cta--secondary {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  color: var(--gv-white);
+}
+
+.graphic-viewer__cta--secondary:hover {
+  border-color: var(--gv-white);
+  color: var(--gv-white);
+}
+
+/* Empty state */
+.graphic-viewer__empty {
+  width: 100%;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--gv-text-muted);
+  font-family: var(--font-heading--family);
+  font-size: 0.875rem;
+  letter-spacing: 0.04em;
+}
+
+/* ─── Grid panel ────────────────────────────────────────────── */
+.graphic-viewer__grid-panel {
+  padding: 24px 0;
+}
+
+/* ─── Mobile ────────────────────────────────────────────────── */
+@media (max-width: 749px) {
+  .graphic-viewer {
+    --gv-ski-width: 52px;
+    --gv-ski-height: 416px;
+  }
+
+  .graphic-viewer__viewer-panel {
+    flex-direction: column;
+    min-height: auto;
+  }
+
+  /* Sidebar becomes horizontal strip at bottom */
+  .graphic-viewer__sidebar {
+    width: 100%;
+    flex-direction: row;
+    flex-shrink: 0;
+    border-right: none;
+    border-top: 1px solid var(--gv-border);
+    order: 2;
+    height: 140px;
+    overflow: hidden;
+  }
+
+  .graphic-viewer__filter-row {
+    display: none;
+  }
+
+  .graphic-viewer__thumb-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px;
+    scrollbar-width: none;
+  }
+
+  .graphic-viewer__thumb {
+    flex: 0 0 108px;
+    height: 100%;
+  }
+
+  .graphic-viewer__thumb-list::-webkit-scrollbar {
+    display: none;
+  }
+
+  .graphic-viewer__stage-area {
+    order: 1;
+    padding: 16px 16px 12px;
+    gap: 12px;
+    min-height: 0;
+  }
+
+  .graphic-viewer__stage {
+    gap: 16px;
+  }
+
+  .graphic-viewer__metadata-name {
+    font-size: 1rem;
+  }
+
+  .graphic-viewer__info-strip {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-top: 12px;
+  }
+
+  .graphic-viewer__actions {
+    width: 100%;
+  }
+
+  .graphic-viewer__cta {
+    flex: 1;
+    padding: 11px 12px;
+    font-size: 0.75rem;
+  }
+
+  .graphic-viewer__grid-panel {
+    padding: 16px 0;
+  }
+}
+
+/* ─── Reduced motion ────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .graphic-viewer__ski-layer,
+  .graphic-viewer__mode-btn,
+  .graphic-viewer__tier-btn,
+  .graphic-viewer__thumb,
+  .graphic-viewer__cta {
+    transition: none;
+  }
+}

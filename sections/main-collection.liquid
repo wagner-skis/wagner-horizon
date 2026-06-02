@@ -22,57 +22,265 @@
 
 {% comment %} We always render this full-width, as the child blocks have width: page/full settings {% endcomment %}
 <div class="section-background color-{{ section.settings.color_scheme }}"></div>
-<results-list
-  class="section product-grid-container color-{{ section.settings.color_scheme }}"
-  style="--padding-block-start: {{ section.settings.padding-block-start }}px; --padding-block-end: {{ section.settings.padding-block-end }}px;"
-  section-id="{{ section.id }}"
-  infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
->
-  {% render 'skip-to-content-link', href: '#ResultsList', text: 'accessibility.skip_to_results_list' %}
+
+{% if section.settings.layout_type == 'graphic_viewer' %}
+
+  <link rel="stylesheet" href="{{ 'graphic-viewer.css' | asset_url }}">
+  <script type="module">import '@theme/graphic-viewer';</script>
 
   <div
-    class="collection-wrapper grid gap-style{% if section.settings.product_grid_width == 'full-width' %} collection-wrapper--grid-full-width{% endif %}"
+    class="section product-grid-container color-{{ section.settings.color_scheme }}"
+    style="--padding-block-start: {{ section.settings.padding-block-start }}px; --padding-block-end: {{ section.settings.padding-block-end }}px;"
   >
-    {% content_for 'block',
-      type: 'filters',
-      id: 'filters',
-      results: collection,
-      results_size: collection.products_count
-    %}
+    <graphic-viewer class="graphic-viewer" data-section-id="{{ section.id }}">
 
-    {% assign products_per_page = 24 %}
+      <div class="graphic-viewer__toolbar">
+        <button
+          type="button"
+          ref="modeBtns[]"
+          class="graphic-viewer__mode-btn"
+          data-mode="viewer"
+          aria-pressed="true"
+          aria-label="Viewer mode"
+          on:click="graphic-viewer/handleModeToggle"
+        >
+          <svg viewBox="0 0 18 18" aria-hidden="true">
+            <rect x="1" y="1" width="7" height="16" rx="1"/>
+            <rect x="10" y="1" width="7" height="16" rx="1"/>
+          </svg>
+        </button>
+        <button
+          type="button"
+          ref="modeBtns[]"
+          class="graphic-viewer__mode-btn"
+          data-mode="grid"
+          aria-pressed="false"
+          aria-label="Grid mode"
+          on:click="graphic-viewer/handleModeToggle"
+        >
+          <svg viewBox="0 0 18 18" aria-hidden="true">
+            <rect x="1" y="1" width="7" height="7" rx="1"/>
+            <rect x="10" y="1" width="7" height="7" rx="1"/>
+            <rect x="1" y="10" width="7" height="7" rx="1"/>
+            <rect x="10" y="10" width="7" height="7" rx="1"/>
+          </svg>
+        </button>
+      </div>
 
-    {% if section.settings.enable_infinite_scroll == false %}
-      {% assign products_per_page = section.settings.products_per_page %}
-    {% endif %}
+      <div class="graphic-viewer__viewer-panel" ref="viewerPanel">
 
-    {% paginate collection.products by products_per_page %}
-      {% capture children %}
-        {% for product in collection.products %}
-          <li
-            id="{{ section.id }}-{{ product.id }}"
-            class="product-grid__item product-grid__item--{{ forloop.index0 }}"
-            data-page="{{ paginate.current_page }}"
-            data-product-id="{{ product.id }}"
-            ref="cards[]"
+        <aside class="graphic-viewer__sidebar">
+
+          {%- liquid
+            assign gv_type_list = ''
+            for product in collection.products
+              assign type_key = product.type | handleize
+              if type_key != blank
+                assign type_seen = false
+                assign gv_types_so_far = gv_type_list | split: '|||'
+                for seen_entry in gv_types_so_far
+                  assign seen_parts = seen_entry | split: '::'
+                  if seen_parts[0] == type_key
+                    assign type_seen = true
+                  endif
+                endfor
+                unless type_seen
+                  unless gv_type_list == ''
+                    assign gv_type_list = gv_type_list | append: '|||'
+                  endunless
+                  assign gv_type_list = gv_type_list | append: type_key | append: '::' | append: product.type
+                endunless
+              endif
+            endfor
+            assign gv_unique_types = gv_type_list | split: '|||'
+          -%}
+
+          {% if gv_unique_types.size > 0 %}
+            <div class="graphic-viewer__filter-row" role="group" aria-label="Collection filter">
+              <button
+                type="button"
+                ref="tierBtns[]"
+                class="graphic-viewer__tier-btn"
+                data-tier="all"
+                aria-pressed="true"
+                on:click="graphic-viewer/handleTierFilter"
+              >All</button>
+              {% for type_entry in gv_unique_types %}
+                {%- assign type_parts = type_entry | split: '::' -%}
+                <button
+                  type="button"
+                  ref="tierBtns[]"
+                  class="graphic-viewer__tier-btn"
+                  data-tier="{{ type_parts[0] }}"
+                  aria-pressed="false"
+                  on:click="graphic-viewer/handleTierFilter"
+                >{{ type_parts[1] }}</button>
+              {% endfor %}
+            </div>
+          {% endif %}
+
+          <div class="graphic-viewer__thumb-list" role="list" aria-label="Graphics">
+            {% for product in collection.products %}
+              <button
+                type="button"
+                ref="thumbs[]"
+                class="graphic-viewer__thumb"
+                data-handle="{{ product.handle }}"
+                data-tier="{{ product.type | handleize }}"
+                data-image="{{ product.featured_image | image_url: width: 800 }}"
+                data-title="{{ product.title | escape }}"
+                data-collection="{{ product.type | escape }}"
+                data-price="{{ product.price }}"
+                data-url="{{ product.url }}"
+                aria-label="{{ product.title | escape }}"
+                aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
+                on:click="graphic-viewer/handleThumbClick"
+              >
+                {% if product.featured_image %}
+                  <img
+                    src="{{ product.featured_image | image_url: width: 200 }}"
+                    alt="{{ product.featured_image.alt | escape | default: product.title | escape }}"
+                    loading="lazy"
+                    width="200"
+                    height="200"
+                  >
+                {% endif %}
+              </button>
+            {% endfor %}
+          </div>
+
+        </aside>
+
+        <div class="graphic-viewer__stage-area">
+
+          <div class="graphic-viewer__metadata" aria-live="polite" aria-atomic="true">
+            <span class="graphic-viewer__metadata-series" ref="metaSeries"></span>
+            <span class="graphic-viewer__metadata-name" ref="metaName"></span>
+          </div>
+
+          <div class="graphic-viewer__stage">
+            <div class="graphic-viewer__ski graphic-viewer__ski--left" ref="skiShapes[]" aria-hidden="true">
+              <div class="graphic-viewer__ski-base"></div>
+              <div class="graphic-viewer__ski-layer" data-layer="a"></div>
+              <div class="graphic-viewer__ski-layer" data-layer="b"></div>
+            </div>
+            <div class="graphic-viewer__ski graphic-viewer__ski--right" ref="skiShapes[]" aria-hidden="true">
+              <div class="graphic-viewer__ski-base"></div>
+              <div class="graphic-viewer__ski-layer" data-layer="a"></div>
+              <div class="graphic-viewer__ski-layer" data-layer="b"></div>
+            </div>
+          </div>
+
+          <div class="graphic-viewer__info-strip">
+            <div class="graphic-viewer__msrp">
+              <span class="graphic-viewer__msrp-label">MSRP Starting At</span>
+              <span class="graphic-viewer__msrp-value" ref="msrpValue"></span>
+            </div>
+            <div class="graphic-viewer__actions">
+              <a ref="ctaPrimary" class="graphic-viewer__cta graphic-viewer__cta--primary" href="#">Customize This Pair</a>
+              <a ref="ctaSecondary" class="graphic-viewer__cta graphic-viewer__cta--secondary" href="#">Technical Specs</a>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <div class="graphic-viewer__grid-panel" ref="gridPanel" hidden>
+        {% assign gv_products_per_page = 24 %}
+        {% if section.settings.enable_infinite_scroll == false %}
+          {% assign gv_products_per_page = section.settings.products_per_page %}
+        {% endif %}
+        {% paginate collection.products by gv_products_per_page %}
+          {% capture gv_children %}
+            {% for product in collection.products %}
+              <li
+                id="{{ section.id }}-{{ product.id }}"
+                class="product-grid__item product-grid__item--{{ forloop.index0 }}"
+                data-page="{{ paginate.current_page }}"
+                data-product-id="{{ product.id }}"
+                ref="cards[]"
+              >
+                {% # theme-check-disable %}
+                {% content_for 'block', type: '_product-card', id: 'product-card', closest.product: product %}
+                {% # theme-check-enable %}
+              </li>
+            {% endfor %}
+          {% endcapture %}
+          <results-list
+            class="main-collection-grid"
+            section-id="{{ section.id }}"
+            infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
           >
-            {% # theme-check-disable %}
-            {% content_for 'block', type: '_product-card', id: 'product-card', closest.product: product %}
-            {% # theme-check-enable %}
-          </li>
-        {% endfor %}
-      {% endcapture %}
+            {% render 'product-grid',
+              section: section,
+              children: gv_children,
+              products: collection.products,
+              paginate: paginate,
+              enable_infinite_scroll: section.settings.enable_infinite_scroll
+            %}
+          </results-list>
+        {% endpaginate %}
+      </div>
 
-      {% render 'product-grid',
-        section: section,
-        children: children,
-        products: collection.products,
-        paginate: paginate,
-        enable_infinite_scroll: section.settings.enable_infinite_scroll
-      %}
-    {% endpaginate %}
+    </graphic-viewer>
   </div>
-</results-list>
+
+{% else %}
+
+  <results-list
+    class="section product-grid-container color-{{ section.settings.color_scheme }}"
+    style="--padding-block-start: {{ section.settings.padding-block-start }}px; --padding-block-end: {{ section.settings.padding-block-end }}px;"
+    section-id="{{ section.id }}"
+    infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
+  >
+    {% render 'skip-to-content-link', href: '#ResultsList', text: 'accessibility.skip_to_results_list' %}
+
+    <div
+      class="collection-wrapper grid gap-style{% if section.settings.product_grid_width == 'full-width' %} collection-wrapper--grid-full-width{% endif %}"
+    >
+      {% content_for 'block',
+        type: 'filters',
+        id: 'filters',
+        results: collection,
+        results_size: collection.products_count
+      %}
+
+      {% assign products_per_page = 24 %}
+
+      {% if section.settings.enable_infinite_scroll == false %}
+        {% assign products_per_page = section.settings.products_per_page %}
+      {% endif %}
+
+      {% paginate collection.products by products_per_page %}
+        {% capture children %}
+          {% for product in collection.products %}
+            <li
+              id="{{ section.id }}-{{ product.id }}"
+              class="product-grid__item product-grid__item--{{ forloop.index0 }}"
+              data-page="{{ paginate.current_page }}"
+              data-product-id="{{ product.id }}"
+              ref="cards[]"
+            >
+              {% # theme-check-disable %}
+              {% content_for 'block', type: '_product-card', id: 'product-card', closest.product: product %}
+              {% # theme-check-enable %}
+            </li>
+          {% endfor %}
+        {% endcapture %}
+
+        {% render 'product-grid',
+          section: section,
+          children: children,
+          products: collection.products,
+          paginate: paginate,
+          enable_infinite_scroll: section.settings.enable_infinite_scroll
+        %}
+      {% endpaginate %}
+    </div>
+  </results-list>
+
+{% endif %}
 
 {% stylesheet %}
   .main-collection-grid {
@@ -103,6 +311,10 @@
         {
           "value": "organic",
           "label": "t:options.editorial"
+        },
+        {
+          "value": "graphic_viewer",
+          "label": "t:options.graphic_viewer"
         }
       ],
       "default": "grid"
