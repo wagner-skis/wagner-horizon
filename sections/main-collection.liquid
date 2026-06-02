@@ -32,7 +32,7 @@
     class="section product-grid-container color-{{ section.settings.color_scheme }}"
     style="--padding-block-start: {{ section.settings.padding-block-start }}px; --padding-block-end: {{ section.settings.padding-block-end }}px;"
   >
-    <graphic-viewer class="graphic-viewer" data-section-id="{{ section.id }}">
+    <graphic-viewer class="graphic-viewer" data-section-id="{{ section.id }}" data-grid-panel-id="gv-grid-{{ section.id }}">
 
       <div class="graphic-viewer__toolbar">
         <button
@@ -121,13 +121,14 @@
 
           <div class="graphic-viewer__thumb-list" role="list" aria-label="Graphics">
             {% for product in collection.products %}
-              <button
-                type="button"
+              <div
                 ref="thumbs[]"
                 class="graphic-viewer__thumb"
+                role="button"
+                tabindex="0"
                 data-handle="{{ product.handle }}"
                 data-tier="{{ product.type | handleize }}"
-                data-image="{{ product.featured_image | image_url: width: 800 }}"
+                data-image="{{ product.featured_image | image_url: width: 1200 }}"
                 data-title="{{ product.title | escape }}"
                 data-collection="{{ product.type | escape }}"
                 data-price="{{ product.price }}"
@@ -135,18 +136,12 @@
                 aria-label="{{ product.title | escape }}"
                 aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
                 on:click="graphic-viewer/handleThumbClick"
+                on:keydown="graphic-viewer/handleThumbKeydown"
               >
-                {% if product.featured_image %}
-                  <img
-                    src="{{ product.featured_image | image_url: width: 600 }}"
-                    alt="{{ product.featured_image.alt | escape | default: product.title | escape }}"
-                    loading="lazy"
-                    width="600"
-                    height="200"
-                  >
-                {% endif %}
-                <span class="graphic-viewer__thumb-title">{{ product.title | escape }}</span>
-              </button>
+                {% # theme-check-disable UniqueStaticBlockId %}
+                {% content_for 'block', type: '_product-card', id: 'product-card', closest.product: product %}
+                {% # theme-check-enable %}
+              </div>
             {% endfor %}
           </div>
 
@@ -159,17 +154,9 @@
             <span class="graphic-viewer__metadata-name" ref="metaName"></span>
           </div>
 
-          <div class="graphic-viewer__stage">
-            <div class="graphic-viewer__ski graphic-viewer__ski--left" ref="skiShapes[]" aria-hidden="true">
-              <div class="graphic-viewer__ski-base"></div>
-              <div class="graphic-viewer__ski-layer" data-layer="a"></div>
-              <div class="graphic-viewer__ski-layer" data-layer="b"></div>
-            </div>
-            <div class="graphic-viewer__ski graphic-viewer__ski--right" ref="skiShapes[]" aria-hidden="true">
-              <div class="graphic-viewer__ski-base"></div>
-              <div class="graphic-viewer__ski-layer" data-layer="a"></div>
-              <div class="graphic-viewer__ski-layer" data-layer="b"></div>
-            </div>
+          <div class="graphic-viewer__stage" ref="stage" aria-hidden="true">
+            <div class="graphic-viewer__stage-layer" ref="stageLayers[]" data-layer="a"></div>
+            <div class="graphic-viewer__stage-layer" ref="stageLayers[]" data-layer="b"></div>
           </div>
 
           <div class="graphic-viewer__info-strip">
@@ -187,54 +174,56 @@
 
       </div>
 
-      <div class="graphic-viewer__grid-panel" ref="gridPanel" hidden>
-        <div
-          class="collection-wrapper grid gap-style{% if section.settings.product_grid_width == 'full-width' %} collection-wrapper--grid-full-width{% endif %}"
-        >
-          {% content_for 'block',
-            type: 'filters',
-            id: 'filters',
-            results: collection,
-            results_size: collection.products_count
-          %}
-          {% assign gv_products_per_page = 24 %}
-          {% if section.settings.enable_infinite_scroll == false %}
-            {% assign gv_products_per_page = section.settings.products_per_page %}
-          {% endif %}
-          {% paginate collection.products by gv_products_per_page %}
-            {% capture gv_children %}
-              {% for product in collection.products %}
-                <li
-                  id="{{ section.id }}-{{ product.id }}"
-                  class="product-grid__item product-grid__item--{{ forloop.index0 }}"
-                  data-page="{{ paginate.current_page }}"
-                  data-product-id="{{ product.id }}"
-                  ref="cards[]"
-                >
-                  {% # theme-check-disable %}
-                  {% content_for 'block', type: '_product-card', id: 'product-card', closest.product: product %}
-                  {% # theme-check-enable %}
-                </li>
-              {% endfor %}
-            {% endcapture %}
-            <results-list
-              class="main-collection-grid"
-              section-id="{{ section.id }}"
-              infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
-            >
-              {% render 'product-grid',
-                section: section,
-                children: gv_children,
-                products: collection.products,
-                paginate: paginate,
-                enable_infinite_scroll: section.settings.enable_infinite_scroll
-              %}
-            </results-list>
-          {% endpaginate %}
-        </div>
-      </div>
-
     </graphic-viewer>
+
+    <div id="gv-grid-{{ section.id }}" hidden>
+      <div
+        class="collection-wrapper grid gap-style{% if section.settings.product_grid_width == 'full-width' %} collection-wrapper--grid-full-width{% endif %}"
+      >
+        {% # theme-check-disable UniqueStaticBlockId %}
+        {% content_for 'block',
+          type: 'filters',
+          id: 'filters',
+          results: collection,
+          results_size: collection.products_count
+        %}
+        {% # theme-check-enable %}
+        {% assign gv_products_per_page = 24 %}
+        {% if section.settings.enable_infinite_scroll == false %}
+          {% assign gv_products_per_page = section.settings.products_per_page %}
+        {% endif %}
+        {% paginate collection.products by gv_products_per_page %}
+          {% capture gv_children %}
+            {% for product in collection.products %}
+              <li
+                id="{{ section.id }}-{{ product.id }}"
+                class="product-grid__item product-grid__item--{{ forloop.index0 }}"
+                data-page="{{ paginate.current_page }}"
+                data-product-id="{{ product.id }}"
+              >
+                {% # theme-check-disable %}
+                {% content_for 'block', type: '_product-card', id: 'product-card', closest.product: product %}
+                {% # theme-check-enable %}
+              </li>
+            {% endfor %}
+          {% endcapture %}
+          <results-list
+            class="main-collection-grid"
+            section-id="{{ section.id }}"
+            infinite-scroll="{{ section.settings.enable_infinite_scroll }}"
+          >
+            {% render 'product-grid',
+              section: section,
+              children: gv_children,
+              products: collection.products,
+              paginate: paginate,
+              enable_infinite_scroll: section.settings.enable_infinite_scroll
+            %}
+          </results-list>
+        {% endpaginate %}
+      </div>
+    </div>
+
   </div>
 
 {% else %}
@@ -250,12 +239,14 @@
     <div
       class="collection-wrapper grid gap-style{% if section.settings.product_grid_width == 'full-width' %} collection-wrapper--grid-full-width{% endif %}"
     >
+      {% # theme-check-disable UniqueStaticBlockId %}
       {% content_for 'block',
         type: 'filters',
         id: 'filters',
         results: collection,
         results_size: collection.products_count
       %}
+      {% # theme-check-enable %}
 
       {% assign products_per_page = 24 %}
 

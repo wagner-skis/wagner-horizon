@@ -1,14 +1,19 @@
 import { Component } from '@theme/component';
 
 class GraphicViewer extends Component {
+  #gridPanel = null;
+
   state = {
     activeHandle: null,
     activeTier: 'all',
+    activeLayer: 'a',
     mode: 'viewer',
   };
 
   connectedCallback() {
     super.connectedCallback();
+
+    this.#gridPanel = document.getElementById(this.dataset.gridPanelId);
 
     // Show first thumbnail without a fade transition on initial load
     this.classList.add('graphic-viewer--init');
@@ -28,7 +33,15 @@ class GraphicViewer extends Component {
   handleThumbClick(event) {
     const thumb = event.target.closest('[data-handle]');
     if (!thumb || thumb.hidden) return;
+    event.preventDefault();
     this.#selectThumb(thumb);
+  }
+
+  handleThumbKeydown(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      event.target.closest('[data-handle]')?.click();
+    }
   }
 
   handleTierFilter(event) {
@@ -58,9 +71,8 @@ class GraphicViewer extends Component {
     }
 
     const viewerPanel = this.refs.viewerPanel;
-    const gridPanel = this.refs.gridPanel;
     if (viewerPanel) viewerPanel.hidden = newMode !== 'viewer';
-    if (gridPanel) gridPanel.hidden = newMode !== 'grid';
+    if (this.#gridPanel) this.#gridPanel.hidden = newMode !== 'grid';
     this.classList.toggle('graphic-viewer--grid-mode', newMode === 'grid');
   }
 
@@ -85,20 +97,19 @@ class GraphicViewer extends Component {
   }
 
   #crossFade(imageUrl) {
-    for (const ski of (this.refs.skiShapes || [])) {
-      const current = ski.dataset.activeLayer || 'a';
-      const next = current === 'a' ? 'b' : 'a';
+    const current = this.state.activeLayer;
+    const next = current === 'a' ? 'b' : 'a';
 
-      const currentLayer = ski.querySelector(`[data-layer="${current}"]`);
-      const nextLayer = ski.querySelector(`[data-layer="${next}"]`);
-      if (!currentLayer || !nextLayer) continue;
+    const layers = this.refs.stageLayers || [];
+    const currentLayer = layers.find(l => l.dataset.layer === current);
+    const nextLayer = layers.find(l => l.dataset.layer === next);
+    if (!currentLayer || !nextLayer) return;
 
-      nextLayer.style.backgroundImage = `url('${imageUrl}')`;
-      nextLayer.style.opacity = '1';
-      currentLayer.style.opacity = '0';
+    nextLayer.style.backgroundImage = `url('${imageUrl}')`;
+    nextLayer.style.opacity = '1';
+    currentLayer.style.opacity = '0';
 
-      ski.dataset.activeLayer = next;
-    }
+    this.state.activeLayer = next;
   }
 
   #applyFilters() {
@@ -111,11 +122,9 @@ class GraphicViewer extends Component {
       if (matches && !firstVisible) firstVisible = thumb;
     }
 
-    // Select first visible graphic after filter change
     if (firstVisible && firstVisible.dataset.handle !== this.state.activeHandle) {
       this.#selectThumb(firstVisible);
     } else if (!firstVisible) {
-      // Clear stage if no results
       for (const el of [this.refs.metaName, this.refs.metaSeries, this.refs.msrpValue]) {
         if (el) el.textContent = '';
       }
