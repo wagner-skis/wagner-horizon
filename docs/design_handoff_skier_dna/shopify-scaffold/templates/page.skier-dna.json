@@ -1,0 +1,26 @@
+{%- comment -%}
+  Dedicated page template for the Skier DNA experience.
+  Place at: templates/page.skier-dna.json  (Online Store 2.0 JSON template)
+
+  Create a Shopify page (e.g. /pages/skier-dna) and assign it this template.
+  The theme's GLOBAL HEADER and FOOTER (sections/header + footer in the theme's
+  layout/theme.liquid) render automatically above and below this — you do NOT
+  add them here and must NOT rebuild them inside the experience. This template
+  only owns the page BODY, which is the single Skier DNA section.
+
+  Because Skier DNA is just a section, it could technically be added to other
+  2.0 templates too — but for Phase 1 this dedicated page is the ONE entry
+  point. Don't build for product-page/modal embedding; it's out of scope.
+{%- endcomment -%}
+{
+  "sections": {
+    "skier_dna": {
+      "type": "skier-dna",
+      "settings": {
+        "heading": "Let's find your ski.",
+        "subhead": "Answer a few questions and watch the ski we'd build for you come to life."
+      }
+    }
+  },
+  "order": ["skier_dna"]
+}

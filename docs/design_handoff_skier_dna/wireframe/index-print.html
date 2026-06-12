@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wagner Skier DNA — Wireframes (print)</title>
+<link rel="stylesheet" href="wireframe.css" />
+<style>
+  html, body { margin: 0; background: #fff; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  /* Named page sizes so wide screens print landscape, phones portrait */
+  @page landscape { size: 11in 8.5in; margin: 0.4in; }
+  @page portrait  { size: 8.5in 11in; margin: 0.4in; }
+
+  .page {
+    box-sizing: border-box;
+    display: flex; flex-direction: column;
+    background: #fff;
+    /* on-screen page frame to preview pagination */
+    width: 1000px; margin: 0 auto 26px; padding: 18px 22px;
+    border: 1px solid #ddd;
+  }
+  .page.landscape { page: landscape; }
+  .page.portrait  { page: portrait; width: 760px; }
+
+  .page-head {
+    display: flex; align-items: baseline; gap: 12px;
+    border-bottom: 1px solid var(--wf-line); padding-bottom: 8px; margin-bottom: 10px;
+  }
+  .page-sec { font: 700 11px/1 var(--wf-mono); letter-spacing: .12em; text-transform: uppercase; color: var(--wf-sel); }
+  .page-label { font: 600 13px/1 var(--wf-sans); color: var(--wf-ink); }
+  .page-idx { margin-left: auto; font: 600 11px/1 var(--wf-mono); color: var(--wf-ink-3); }
+
+  .page-stage { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+  .board-fit { transform-origin: center center; }
+  .print-board { background: #fff; }
+
+  /* Section divider page */
+  .divider { justify-content: center; align-items: flex-start; }
+  .divider .d-num { font: 800 64px/1 var(--wf-sans); color: var(--wf-line); letter-spacing: -.03em; }
+  .divider .d-title { font: 700 38px/1.1 var(--wf-sans); color: var(--wf-ink); margin-top: 6px; letter-spacing: -.02em; }
+  .divider .d-sub { font: 400 17px/1.5 var(--wf-sans); color: var(--wf-ink-2); margin-top: 12px; max-width: 640px; }
+
+  @media print {
+    html, body { background: #fff; }
+    .page { width: auto; margin: 0; padding: 0; border: none; break-after: page; }
+    .page:last-child { break-after: auto; }
+    .page.portrait { width: auto; }
+    *, *::before, *::after {
+      animation-delay: -99s !important; animation-duration: .001s !important;
+      animation-iteration-count: 1 !important; animation-fill-mode: both !important;
+      animation-play-state: running !important; transition-duration: 0s !important;
+    }
+  }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="ski-panel.jsx"></script>
+<script type="text/babel" src="wf-kit.jsx"></script>
+<script type="text/babel" src="screens-act12.jsx"></script>
+<script type="text/babel" src="screens-act345.jsx"></script>
+<script type="text/babel" src="screens-extra.jsx"></script>
+
+<script type="text/babel">
+const { Board, Rail } = window;
+const n = (num, t, plain) => ({ n: num, t, plain });
+
+// Printable-area content boxes in CSS px (≈96dpi, Letter minus 0.4in margins),
+// minus header allowance.
+const BOX = {
+  landscape: { w: 979, h: 739 - 44 },
+  portrait:  { w: 739, h: 979 - 44 },
+};
+
+// Natural-size board builders (no DesignCanvas / DCArtboard).
+function boardD({ w = 1080, h, head, notes, child }) {
+  return { bw: w + 360, bh: h, orient: 'landscape',
+    node: <div className="print-board" style={{ width: w + 360, height: h }}>
+      <Board stageW={w} railW={360} rail={<Rail head={head} notes={notes} />}>{child}</Board>
+    </div> };
+}
+function boardM({ h, head, notes, child }) {
+  return { bw: 430 + 340, bh: h, orient: 'portrait',
+    node: <div className="print-board" style={{ width: 430 + 340, height: h }}>
+      <Board stageW={430} railW={340} rail={<Rail head={head} notes={notes} />}>
+        <div className="wf" style={{ height: '100%', padding: '26px 20px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflow: 'hidden', background: '#fff' }}>{child}</div>
+      </Board>
+    </div> };
+}
+function boardS({ w, h, child }) {
+  return { bw: w, bh: h, orient: 'landscape',
+    node: <div className="print-board" style={{ width: w, height: h }}>{child}</div> };
+}
+
+function Page({ sec, label, idx, board }) {
+  const box = BOX[board.orient];
+  const scale = Math.min(box.w / board.bw, box.h / board.bh, 1);
+  return (
+    <div className={'page ' + board.orient}>
+      <div className="page-head">
+        <span className="page-sec">{sec}</span>
+        <span className="page-label">{label}</span>
+        <span className="page-idx">{idx}</span>
+      </div>
+      <div className="page-stage">
+        <div className="board-fit" style={{ width: Math.round(board.bw * scale), height: Math.round(board.bh * scale) }}>
+          <div style={{ width: board.bw, height: board.bh, transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+            {board.node}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+function Divider({ num, title, sub, orient = 'landscape' }) {
+  return (
+    <div className={'page divider ' + orient}>
+      <div>
+        <div className="d-num">{num}</div>
+        <div className="d-title">{title}</div>
+        <div className="d-sub">{sub}</div>
+      </div>
+    </div>
+  );
+}
+
+// ── Page manifest — mirrors the canvas, section by section ──
+const W = window;
+const SECTIONS = [
+  { num: '00', sec: '00 · Flow', title: 'Flow', sub: 'The whole experience at a glance — for the engineer & Pete.', pages: [
+    { label: 'Flow diagram', board: boardS({ w: 1180, h: 680, child: <W.FlowDiagram /> }) },
+  ]},
+  { num: '01', sec: '01 · Components', title: 'Universal components', sub: 'Reusable elements with their states — built once, used everywhere.', pages: [
+    { label: 'Buttons & links', board: boardS({ w: 1180, h: 250, child: <W.RefButtons /> }) },
+    { label: 'Inputs, number & upload', board: boardS({ w: 1180, h: 360, child: <W.RefInputs /> }) },
+    { label: 'Selection controls', board: boardS({ w: 1040, h: 320, child: <W.RefSelection /> }) },
+    { label: 'Sliders, pills & progress', board: boardS({ w: 1160, h: 300, child: <W.RefControls /> }) },
+  ]},
+  { num: '02', sec: '02 · Ski Panel', title: 'Ski Silhouette Panel', sub: 'The centerpiece component — eight evolution states, left to right.', pages: [
+    { label: 'Eight evolution states', board: boardS({ w: 1320, h: 540, child: <W.SkiStrip /> }) },
+  ]},
+  { num: '03', sec: '03 · Act 1 — Hello', title: 'Act 1 — Hello', sub: 'Name capture · ski State 0.', pages: [
+    { label: 'Act 1 / Hello / Desktop', board: boardD({ h: 720, head: 'Act 1 · Hello', notes: [
+      n(1, <>Single text input for first name, <b>auto-focused</b> on load with a blinking caret.</>),
+      n(2, <><b>Continue is disabled</b> until at least one character is entered.</>),
+      n(3, <>Ski Panel in the right ~42% — <b>State 0</b>: bare wood-grain outline, no rocker, no graphic.</>),
+      n(4, <>Progress breadcrumb shows <b>act labels only</b> (dotted, no percentage bar).</>),
+      n(5, <>Copy is ski-shop conversational. No "configurator" — say "build" or "ski".</>, true),
+    ], child: <W.Act1Desktop /> }) },
+    { label: 'Act 1 / Hello / Mobile', board: boardM({ h: 800, head: 'Act 1 · Mobile', notes: [
+      n(1, <>Ski Panel moves to the <b>top third</b>; form stacks beneath.</>),
+      n(2, <>Full-width Continue, disabled until name entered.</>),
+      n(3, <>Compact progress dots — no labels on mobile.</>, true),
+    ], child: <W.Act1Mobile /> }) },
+  ]},
+  { num: '04', sec: '04 · Act 2 — Where & When', title: 'Act 2 — Where & When', sub: 'Region · day type · terrain. Both the one-scroll and sequential layouts are wireframed.', pages: [
+    { label: 'Act 2 / All-on-one-scroll / Desktop', board: boardD({ h: 1220, head: 'Act 2 · Scroll variant', notes: [
+      n(1, <><b>Layout option A:</b> all three questions on one scrolling screen. Ski Panel is <b>sticky</b> and updates live.</>),
+      n(2, <><b>Region</b> — stylized world map, multi-select 1–3.</>),
+      n(3, <><b>Day type</b> — four large picture-cards, multi-select 1+.</>),
+      n(4, <><b>Terrain</b> — eight smaller picture-cards, multi-select 1–3.</>),
+      n(5, <>Panel runs States 1→3: snow texture → waist morph → tip/tail rocker.</>, true),
+    ], child: <W.Act2ScrollDesktop /> }) },
+    { label: 'Act 2 / Region / Desktop (sequential)', board: boardD({ h: 740, head: 'Act 2 · Sequential 1/3', notes: [
+      n(1, <><b>Layout option B:</b> three sequential micro-screens. This is 1 of 3.</>),
+      n(2, <>World-map region selector. Count chip enforces the <b>1–3 limit</b>.</>),
+      n(3, <>Panel → <b>State 1</b>: snow-texture overlay appears on the base.</>),
+    ], child: <W.Act2Seq step="1" n={1} evo="State 1 — snow texture on base" q={<W.RegionQ />} /> }) },
+    { label: 'Act 2 / Day type / Desktop (sequential)', board: boardD({ h: 740, head: 'Act 2 · Sequential 2/3', notes: [
+      n(1, <>Four large picture-cards, multi-select 1+.</>),
+      n(2, <>Selected cards get a ring + check.</>),
+      n(3, <>Panel → <b>State 2</b>: waist width morphs toward the target range.</>),
+    ], child: <W.Act2Seq step="2" n={2} evo="State 2 — waist morphs to target" q={<W.DayTypeQ />} /> }) },
+    { label: 'Act 2 / Terrain / Desktop (sequential)', board: boardD({ h: 760, head: 'Act 2 · Sequential 3/3', notes: [
+      n(1, <>Eight picture-cards in a 4-up grid, multi-select 1–3.</>),
+      n(2, <>Count chip enforces the limit.</>),
+      n(3, <>Panel → <b>State 3</b>: tip and tail rocker begin to form.</>),
+    ], child: <W.Act2Seq step="3" n={3} evo="State 3 — tip + tail rocker form" q={<W.TerrainQ />} /> }) },
+    { label: 'Act 2 / Region / Mobile', board: boardM({ h: 900, head: 'Act 2 · Region · Mobile', notes: [
+      n(1, <>Map scales to full width; region tags remain tappable.</>),
+      n(2, <>Count chip sits below the map.</>, true),
+    ], child: <W.Act2Mobile n={1} foot="Next →" q={<W.RegionQ compact />} /> }) },
+    { label: 'Act 2 / Day type / Mobile', board: boardM({ h: 940, head: 'Act 2 · Day type · Mobile', notes: [
+      n(1, <>Picture-cards stack into a 2-up grid.</>, true),
+    ], child: <W.Act2Mobile n={2} foot="Next →" q={<W.DayTypeQ compact />} /> }) },
+    { label: 'Act 2 / Terrain / Mobile', board: boardM({ h: 1160, head: 'Act 2 · Terrain · Mobile', notes: [
+      n(1, <>Eight cards in a 2-up grid; count chip below.</>, true),
+    ], child: <W.Act2Mobile n={3} foot="Continue →" q={<W.TerrainQ compact />} /> }) },
+  ]},
+  { num: '05', sec: '05 · Act 3 — Feel', title: 'Act 3 — Feel', sub: 'Stability/weight · current skis · bindings · ski States 4–6.', pages: [
+    { label: 'Act 3 / Feel / Desktop', board: boardD({ h: 1060, head: 'Act 3 · Feel', notes: [
+      n(1, <><b>Stability vs Weight</b> — bipolar slider, four labelled stops. Live preview flexes the ski.</>),
+      n(2, <>Construction hints reveal — metallic shimmer toward stable, carbon weave toward light (State 4).</>),
+      n(3, <><b>Current skis</b> — brand, model, year, length, optional photo, two free-text fields.</>),
+      n(4, <>A <b>ghost outline</b> of the current ski sits beneath the new one (State 5).</>),
+      n(5, <><b>Bindings</b> — single-select radio. Selecting adds a binding silhouette (State 6).</>),
+      n(6, <><b>Micro-CTA appears from Act 3 onward</b>: "Prefer to talk it through? Book a 20-min call."</>),
+    ], child: <W.Act3Desktop /> }) },
+    { label: 'Act 3 / Feel / Mobile', board: boardM({ h: 1600, head: 'Act 3 · Mobile', notes: [
+      n(1, <>Stop labels abbreviate to fit the narrow slider.</>),
+      n(2, <>Current-ski fields stack 2-up; textareas full width.</>),
+      n(3, <>Micro-CTA strip persists below the progress dots.</>, true),
+    ], child: <W.Act3Mobile /> }) },
+  ]},
+  { num: '06', sec: '06 · Act 4 — You', title: 'Act 4 — You', sub: 'Optional body details · ski State 7 (true-scale vs body).', pages: [
+    { label: 'Act 4 / You / Desktop', board: boardD({ h: 820, head: 'Act 4 · You', notes: [
+      n(1, <>Gentle gate copy: "Ready for some personal questions? Optional, but they help us nail the spec."</>),
+      n(2, <>Height & Weight have a <b>unit toggle</b> (in/cm, lb/kg). Age and BSL optional.</>),
+      n(3, <><b>Skier ability (type)</b> — Level I / II / III / III+ selector. Feeds flex & length, maps to DIN.</>),
+      n(4, <>A "Skip these" link is offered as a secondary affordance.</>),
+      n(5, <>Panel → <b>State 7</b>: ski beside a stick-figure at true scale; tip reaches chin–forehead.</>),
+    ], child: <W.Act4Desktop /> }) },
+    { label: 'Act 4 / You / Mobile', board: boardM({ h: 940, head: 'Act 4 · Mobile', notes: [
+      n(1, <>Fields stack 2-up; body silhouette anchors the top panel.</>),
+      n(2, <>Skip link centered beneath the primary button.</>, true),
+    ], child: <W.Act4Mobile /> }) },
+  ]},
+  { num: '07', sec: '07 · Act 5 — Your Design', title: 'Act 5 — Your Design', sub: 'The payoff · ski State 8 · explore, save, book.', pages: [
+    { label: 'Act 5 / Your Design / Desktop', board: boardD({ h: 1240, head: 'Act 5 · Your Design', notes: [
+      n(1, <><b>Hero ski</b> at full true-to-scale size with the selected topsheet graphic (State 8).</>),
+      n(2, <><b>Three Ride Personality Cards</b> — runtime names, each with a "What's different" material list.</>),
+      n(3, <><b>Description block</b> — skier-voice copy (~90 words) appears once a personality is selected.</>),
+      n(4, <><b>Spec sheet</b> shows recommended <b>ranges</b>: length, waist, radius, tip/tail, construction, camber, package.</>),
+      n(5, <><b>"Play with it" zone</b> — sliders, camber pills, featured topsheet strip + <b>"Explore graphics →"</b>.</>),
+      n(6, <>CTAs: large <b>"Book my design call"</b> + secondary <b>"Email me this design"</b>.</>),
+    ], child: <W.Act5Desktop /> }) },
+    { label: 'Act 5 / Your Design / Mobile', board: boardM({ h: 2760, head: 'Act 5 · Mobile', notes: [
+      n(1, <>Hero ski pins to the top; everything else scrolls beneath it.</>),
+      n(2, <>Personality cards stack vertically.</>),
+      n(3, <><b>Sticky CTA bar</b> docks "Book my design call" to the bottom.</>),
+    ], child: <W.Act5Mobile /> }) },
+    { label: 'Act 5 / Name picker (interstitial)', board: boardD({ h: 680, head: 'Name-picker moment', notes: [
+      n(1, <>Small interstitial <b>after personality selection</b>, before the design view settles.</>),
+      n(2, <>Three name tiles (one pre-highlighted) plus a <b>"Surprise me"</b> reshuffle.</>),
+      n(3, <>Names are dynamically generated — these are placeholders.</>, true),
+    ], child: <W.NamePicker /> }) },
+  ]},
+  { num: '08', sec: '08 · Modals & states', title: 'Modals & states', sub: 'Save · Book Call · Resume · loading · errors.', pages: [
+    { label: 'Save Design modal', board: boardD({ w: 760, h: 560, head: 'Save Design', notes: [
+      n(1, <>Email field + <b>Klaviyo opt-in</b> checkbox (unticked by default).</>),
+      n(2, <>Primary "Save and email me"; secondary "Maybe later" link.</>),
+    ], child: <W.SaveModal /> }) },
+    { label: 'Save Design — confirmation', board: boardD({ w: 760, h: 560, head: 'Save · confirmed', notes: [
+      n(1, <>Success state: "Saved. Check your inbox." The emailed link reopens the design.</>),
+    ], child: <W.SaveConfirm /> }) },
+    { label: 'Save Design — invalid email', board: boardD({ w: 760, h: 560, head: 'Save · error', notes: [
+      n(1, <>Inline error on invalid email — field turns to error state with a brief message.</>),
+    ], child: <W.SaveError /> }) },
+    { label: 'Book Design Call modal', board: boardD({ w: 760, h: 620, head: 'Book Design Call', notes: [
+      n(1, <>A <b>one-line summary</b> of the design sits above the embed.</>),
+      n(2, <>Tall placeholder for the <b>Calendly inline embed</b>.</>),
+    ], child: <W.BookModal /> }) },
+    { label: 'Resume Design state', board: boardD({ h: 920, head: 'Resume Design', notes: [
+      n(1, <>Entry from the <b>saved-design email link</b>. Lands on Act 5 with the saved spec.</>),
+      n(2, <>A "Welcome back" banner confirms the design was restored.</>),
+      n(3, <>Spec sheet and ski render from saved values.</>, true),
+    ], child: <W.ResumeState /> }) },
+    { label: 'Output loading (Act 4 → 5)', board: boardD({ h: 760, head: 'Loading reveal', notes: [
+      n(1, <>On submit, a <b>2–3 second wait</b> with skeleton placeholders before content populates.</>),
+      n(2, <>Ski silhouette skeleton left; card + spec skeletons right.</>, true),
+    ], child: <W.LoadingState /> }) },
+    { label: 'Required-field error', board: boardD({ h: 720, head: 'Required field', notes: [
+      n(1, <>Skipping a required field shows a <b>brief inline message</b>, never a full-page block.</>),
+      n(2, <>Field flips to error state; ski panel is unaffected.</>, true),
+    ], child: <W.RequiredError /> }) },
+  ]},
+  { num: '09', sec: '09 · Explore graphics', title: 'Explore graphics', sub: 'Dense topsheet library — opens from the Act 5 CTA, tied to the live ski viewer.', pages: [
+    { label: 'Explore graphics / Desktop', board: boardD({ w: 1080, h: 760, head: 'Explore graphics', notes: [
+      n(1, <>Opens as a <b>full-screen overlay</b> from the Act 5 "Explore graphics" CTA.</>),
+      n(2, <><b>Live preview (left)</b> keeps the graphic <b>tied to the viewer</b> — on the user's own ski at scale.</>),
+      n(3, <><b>Category tabs:</b> House Graphics · Artist Series · James Niehues · Wood Veneers.</>),
+      n(4, <><b>Pattern and Color</b> facets come from <b>Shopify Filters</b>; count updates live.</>),
+      n(5, <>Tiles show graphic name + series; selected tile is ringed and reflected in the preview.</>),
+      n(6, <><b>Custom graphics are out of scope here</b> — a soft link defers that to the call.</>, true),
+    ], child: <W.GraphicsExplorer /> }) },
+    { label: 'Explore graphics / Mobile', board: boardM({ h: 1180, head: 'Explore graphics · Mobile', notes: [
+      n(1, <>Preview + selected name pin to the <b>top</b>; tabs scroll horizontally.</>),
+      n(2, <>Pattern / Color filter pills above a 2-up tile grid.</>),
+      n(3, <><b>Sticky "Use this graphic"</b> bar docks to the bottom.</>, true),
+    ], child: <W.GraphicsExplorerMobile /> }) },
+  ]},
+];
+
+function PrintDoc() {
+  const out = [];
+  SECTIONS.forEach((s) => {
+    out.push(<Divider key={'div-' + s.num} num={s.num} title={s.title} sub={s.sub} />);
+    s.pages.forEach((p, i) => {
+      out.push(<Page key={s.num + '-' + i} sec={s.sec} label={p.label} idx={`${s.num}.${i + 1}`} board={p.board} />);
+    });
+  });
+  return <>{out}</>;
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<PrintDoc />);
+
+// Auto-open the print dialog once fonts + layout have settled.
+(function () {
+  if (window.__noprint) return;
+  function go() {
+    Promise.resolve(document.fonts && document.fonts.ready).then(function () {
+      requestAnimationFrame(function () {
+        setTimeout(function () { window.print(); }, 600);
+      });
+    });
+  }
+  if (document.readyState === 'complete') go();
+  else window.addEventListener('load', go);
+})();
+</script>
+</body>
+</html>

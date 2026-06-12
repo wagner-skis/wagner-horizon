@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Wagner Skier DNA — Wireframes</title>
+<link rel="stylesheet" href="wireframe.css" />
+<style>
+  html, body { margin: 0; height: 100%; background: #f0eee9; }
+  #root { height: 100vh; }
+</style>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="ski-panel.jsx"></script>
+<script type="text/babel" src="wf-kit.jsx"></script>
+<script type="text/babel" src="screens-act12.jsx"></script>
+<script type="text/babel" src="screens-act345.jsx"></script>
+<script type="text/babel" src="screens-extra.jsx"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+const { DesignCanvas, DCSection, DCArtboard, Board, Rail } = window;
+
+// NOTE: these helpers are called as FUNCTIONS ({D({...})}), not JSX
+// components — so the element they return is a real <DCArtboard> that
+// DCSection's type-walk recognizes.
+
+// Desktop screen + annotation rail
+function D({ id, label, w = 1080, h, notes, head, children }) {
+  return (
+    <DCArtboard key={id} id={id} label={label} width={w + 360} height={h}>
+      <Board stageW={w} railW={360} rail={<Rail head={head} notes={notes} />}>{children}</Board>
+    </DCArtboard>
+  );
+}
+// Mobile screen + annotation rail (phone padded at top of stage)
+function M({ id, label, h, notes, head, children }) {
+  return (
+    <DCArtboard key={id} id={id} label={label} width={430 + 340} height={h}>
+      <Board stageW={430} railW={340} rail={<Rail head={head} notes={notes} />}>
+        <div className="wf" style={{ height: '100%', padding: '26px 20px', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', overflow: 'hidden', background: '#fff' }}>{children}</div>
+      </Board>
+    </DCArtboard>
+  );
+}
+// Self-contained board (no rail)
+function S({ id, label, w, h, children }) {
+  return <DCArtboard key={id} id={id} label={label} width={w} height={h}>{children}</DCArtboard>;
+}
+
+const n = (num, t, plain) => ({ n: num, t, plain });
+
+function App() {
+  return (
+    <DesignCanvas>
+
+      {/* ───────── FLOW ───────── */}
+      <DCSection id="flow" title="00 · Flow" subtitle="The whole experience at a glance — for the engineer & Pete">
+        {S({ id: 'flow-diagram', label: 'Flow diagram', w: 1180, h: 680, children: <window.FlowDiagram /> })}
+      </DCSection>
+
+      {/* ───────── COMPONENTS ───────── */}
+      <DCSection id="components" title="01 · Universal components" subtitle="Reusable elements with their states — built once, used everywhere">
+        {S({ id: 'ref-buttons', label: 'Buttons & links', w: 1180, h: 250, children: <window.RefButtons /> })}
+        {S({ id: 'ref-inputs', label: 'Inputs, number & upload', w: 1180, h: 360, children: <window.RefInputs /> })}
+        {S({ id: 'ref-selection', label: 'Selection controls', w: 1040, h: 320, children: <window.RefSelection /> })}
+        {S({ id: 'ref-controls', label: 'Sliders, pills & progress', w: 1160, h: 300, children: <window.RefControls /> })}
+      </DCSection>
+
+      {/* ───────── SKI PANEL ───────── */}
+      <DCSection id="ski" title="02 · Ski Silhouette Panel" subtitle="The centerpiece component — eight evolution states, left to right">
+        {S({ id: 'ski-strip', label: 'Eight evolution states', w: 1320, h: 540, children: <window.SkiStrip /> })}
+      </DCSection>
+
+      {/* ───────── ACT 1 ───────── */}
+      <DCSection id="act1" title="03 · Act 1 — Hello" subtitle="Name capture · ski State 0">
+        {D({ id: 'a1d', label: 'Act 1 / Hello / Desktop', h: 720, head: 'Act 1 · Hello',
+          notes: [
+            n(1, <>Single text input for first name, <b>auto-focused</b> on load with a blinking caret.</>),
+            n(2, <><b>Continue is disabled</b> until at least one character is entered, then it activates.</>),
+            n(3, <>Ski Panel sits in the right ~42% — <b>State 0</b>: bare wood-grain outline, generic length, no rocker, no graphic.</>),
+            n(4, <>Progress breadcrumb shows <b>act labels only</b> (dotted, no percentage bar).</>),
+            n(5, <>Copy is ski-shop conversational. No "configurator" — say "build" or "ski".</>, true),
+          ], children: <window.Act1Desktop /> })}
+        {M({ id: 'a1m', label: 'Act 1 / Hello / Mobile', h: 800, head: 'Act 1 · Mobile',
+          notes: [
+            n(1, <>Ski Panel moves to the <b>top third</b> on mobile; form stacks beneath.</>),
+            n(2, <>Full-width Continue, disabled until name entered.</>),
+            n(3, <>Compact progress dots — no labels on mobile.</>, true),
+          ], children: <window.Act1Mobile /> })}
+      </DCSection>
+
+      {/* ───────── ACT 2 ───────── */}
+      <DCSection id="act2" title="04 · Act 2 — Where & When" subtitle="Region · day type · terrain. Both the one-scroll and sequential layouts are wireframed.">
+        {D({ id: 'a2scroll', label: 'Act 2 / All-on-one-scroll / Desktop', h: 1220, head: 'Act 2 · Scroll variant',
+          notes: [
+            n(1, <><b>Layout option A:</b> all three questions on one scrolling screen. Ski Panel is <b>sticky</b> on the right and updates live as the user scrolls.</>),
+            n(2, <><b>Region</b> — stylized world map, multi-select 1–3. Selected regions fill; a count chip reads "2 of 3 selected".</>),
+            n(3, <><b>Day type</b> — four large picture-cards, multi-select 1+.</>),
+            n(4, <><b>Terrain</b> — eight smaller picture-cards in a grid, multi-select 1–3.</>),
+            n(5, <>Panel runs States 1→3: snow texture → waist morph → tip/tail rocker.</>, true),
+          ], children: <window.Act2ScrollDesktop /> })}
+        {D({ id: 'a2r', label: 'Act 2 / Region / Desktop (sequential)', h: 740, head: 'Act 2 · Sequential 1/3',
+          notes: [
+            n(1, <><b>Layout option B:</b> three sequential micro-screens. This is 1 of 3.</>),
+            n(2, <>World-map region selector. Tap a region to fill it; count chip enforces the <b>1–3 limit</b> (4th selection is blocked with a brief hint).</>),
+            n(3, <>Panel → <b>State 1</b>: snow-texture overlay appears on the base.</>),
+          ], children: <window.Act2Seq step="1" n={1} evo="State 1 — snow texture on base" q={<window.RegionQ />} /> })}
+        {D({ id: 'a2d', label: 'Act 2 / Day type / Desktop (sequential)', h: 740, head: 'Act 2 · Sequential 2/3',
+          notes: [
+            n(1, <>Four large picture-cards (placeholder image + label), multi-select 1+.</>),
+            n(2, <>Selected cards get a ring + check. No upper limit here.</>),
+            n(3, <>Panel → <b>State 2</b>: waist width morphs toward the target range (e.g. wider for Powder).</>),
+          ], children: <window.Act2Seq step="2" n={2} evo="State 2 — waist morphs to target" q={<window.DayTypeQ />} /> })}
+        {D({ id: 'a2t', label: 'Act 2 / Terrain / Desktop (sequential)', h: 760, head: 'Act 2 · Sequential 3/3',
+          notes: [
+            n(1, <>Eight smaller picture-cards in a 4-up grid, multi-select 1–3.</>),
+            n(2, <>Count chip enforces the limit just like Region.</>),
+            n(3, <>Panel → <b>State 3</b>: tip and tail rocker profiles begin to form (visible in side profile).</>),
+          ], children: <window.Act2Seq step="3" n={3} evo="State 3 — tip + tail rocker form" q={<window.TerrainQ />} /> })}
+        {M({ id: 'a2rm', label: 'Act 2 / Region / Mobile', h: 900, head: 'Act 2 · Region · Mobile',
+          notes: [
+            n(1, <>Map scales to full width; region tags remain tappable.</>),
+            n(2, <>Count chip sits below the map.</>, true),
+          ], children: <window.Act2Mobile n={1} foot="Next →" q={<window.RegionQ compact />} /> })}
+        {M({ id: 'a2dm', label: 'Act 2 / Day type / Mobile', h: 940, head: 'Act 2 · Day type · Mobile',
+          notes: [ n(1, <>Picture-cards stack into a 2-up grid.</>, true) ], children: <window.Act2Mobile n={2} foot="Next →" q={<window.DayTypeQ compact />} /> })}
+        {M({ id: 'a2tm', label: 'Act 2 / Terrain / Mobile', h: 1160, head: 'Act 2 · Terrain · Mobile',
+          notes: [ n(1, <>Eight cards in a 2-up grid; count chip below.</>, true) ], children: <window.Act2Mobile n={3} foot="Continue →" q={<window.TerrainQ compact />} /> })}
+      </DCSection>
+
+      {/* ───────── ACT 3 ───────── */}
+      <DCSection id="act3" title="05 · Act 3 — Feel" subtitle="Stability/weight · current skis · bindings · ski States 4–6">
+        {D({ id: 'a3d', label: 'Act 3 / Feel / Desktop', h: 1060, head: 'Act 3 · Feel',
+          notes: [
+            n(1, <><b>Stability vs Weight</b> — bipolar slider, four labelled stops. Live preview: ski flexes <b>stiffer toward "stable"</b>, livelier toward "light".</>),
+            n(2, <>Construction hints reveal on the panel — metallic shimmer toward stable, carbon weave toward light (State 4).</>),
+            n(3, <><b>Current skis</b> — brand, model, year, length, optional photo upload, plus two free-text fields (like / improve).</>),
+            n(4, <>Once entered, a <b>ghost outline</b> of the current ski sits beneath the new one (State 5).</>),
+            n(5, <><b>Bindings</b> — single-select radio: Alpine, Alpine Touring, Telemark, "I don't know". Selecting adds a binding silhouette (State 6).</>),
+            n(6, <><b>Micro-CTA appears in the header from Act 3 onward</b>: "Prefer to talk it through? Book a 20-min call." Low-pressure link style.</>),
+          ], children: <window.Act3Desktop /> })}
+        {M({ id: 'a3m', label: 'Act 3 / Feel / Mobile', h: 1600, head: 'Act 3 · Mobile',
+          notes: [
+            n(1, <>Stop labels abbreviate to fit the narrow slider.</>),
+            n(2, <>Current-ski fields stack 2-up; textareas full width.</>),
+            n(3, <>Micro-CTA strip persists below the progress dots.</>, true),
+          ], children: <window.Act3Mobile /> })}
+      </DCSection>
+
+      {/* ───────── ACT 4 ───────── */}
+      <DCSection id="act4" title="06 · Act 4 — You" subtitle="Optional body details · ski State 7 (true-scale vs body)">
+        {D({ id: 'a4d', label: 'Act 4 / You / Desktop', h: 820, head: 'Act 4 · You',
+          notes: [
+            n(1, <>Gentle gate copy: "Ready for some personal questions? Optional, but they help us nail the spec."</>),
+            n(2, <>Height & Weight each have a <b>unit toggle</b> (in/cm, lb/kg). Age and BSL are optional.</>),
+            n(3, <><b>Skier ability (type)</b> — standard Level I / II / III / III+ selector. Feeds the recommended flex & length, and maps to the binding DIN type.</>),
+            n(4, <>A "Skip these" link is offered as a secondary affordance.</>),
+            n(5, <>Panel → <b>State 7</b>: ski stands beside a stick-figure at true scale. Tip should reach between <b>chin and forehead</b> at the recommended length.</>),
+          ], children: <window.Act4Desktop /> })}
+        {M({ id: 'a4m', label: 'Act 4 / You / Mobile', h: 940, head: 'Act 4 · Mobile',
+          notes: [
+            n(1, <>Fields stack 2-up; body silhouette anchors the top panel.</>),
+            n(2, <>Skip link centered beneath the primary button.</>, true),
+          ], children: <window.Act4Mobile /> })}
+      </DCSection>
+
+      {/* ───────── ACT 5 ───────── */}
+      <DCSection id="act5" title="07 · Act 5 — Your Design" subtitle="The payoff · ski State 8 · explore, save, book">
+        {D({ id: 'a5d', label: 'Act 5 / Your Design / Desktop', h: 1240, head: 'Act 5 · Your Design',
+          notes: [
+            n(1, <><b>Hero ski</b> at full true-to-scale size with the selected topsheet graphic (State 8).</>),
+            n(2, <><b>Three Ride Personality Cards</b> — names are <b>generated at runtime</b> (placeholders here). Each shows a one-line teaser plus a <b>"What's different" list of the key material/construction changes</b> (metal vs carbon, core, camber/radius) so the trade-offs are legible at a glance. The chosen one is highlighted.</>),
+            n(3, <><b>Description block</b> — skier-voice marketing copy (~90 words) appears once a personality is selected.</>),
+            n(4, <><b>Spec sheet</b> shows recommended <b>ranges</b>: length, waist, sidecut radius, tip/tail design, construction, camber, package.</>),
+            n(5, <><b>"Play with it" zone</b> — length & waist sliders (within range), camber pills, and a featured topsheet strip with an <b>"Explore graphics →"</b> CTA into the full library.</>),
+            n(6, <>CTAs: large <b>"Book my design call"</b> (Calendly modal) + secondary <b>"Email me this design"</b> (save modal).</>),
+          ], children: <window.Act5Desktop /> })}
+        {M({ id: 'a5m', label: 'Act 5 / Your Design / Mobile', h: 2760, head: 'Act 5 · Mobile',
+          notes: [
+            n(1, <>Hero ski pins to the top; everything else scrolls beneath it.</>),
+            n(2, <>Personality cards stack vertically.</>),
+            n(3, <><b>Sticky CTA bar</b> docks "Book my design call" to the bottom of the viewport.</>),
+          ], children: <window.Act5Mobile /> })}
+        {D({ id: 'namepick', label: 'Act 5 / Name picker (interstitial)', h: 680, head: 'Name-picker moment',
+          notes: [
+            n(1, <>Small interstitial <b>after personality selection</b>, before the full design view settles.</>),
+            n(2, <>Three name tiles (one pre-highlighted) plus a <b>"Surprise me"</b> reshuffle.</>),
+            n(3, <>Names are dynamically generated — these are placeholders.</>, true),
+          ], children: <window.NamePicker /> })}
+      </DCSection>
+
+      {/* ───────── MODALS & STATES ───────── */}
+      <DCSection id="modals" title="08 · Modals & states" subtitle="Save · Book Call · Resume · loading · errors">
+        {D({ id: 'm-save', label: 'Save Design modal', w: 760, h: 560, head: 'Save Design',
+          notes: [
+            n(1, <>Email field + <b>Klaviyo opt-in</b> checkbox (unticked by default).</>),
+            n(2, <>Primary "Save and email me"; secondary "Maybe later" link.</>),
+          ], children: <window.SaveModal /> })}
+        {D({ id: 'm-save-ok', label: 'Save Design — confirmation', w: 760, h: 560, head: 'Save · confirmed',
+          notes: [ n(1, <>Success state: "Saved. Check your inbox." The emailed link reopens the design (see Resume).</>) ], children: <window.SaveConfirm /> })}
+        {D({ id: 'm-save-err', label: 'Save Design — invalid email', w: 760, h: 560, head: 'Save · error',
+          notes: [ n(1, <>Inline error on invalid email format — field turns to error state with a brief message. No full-page block.</>) ], children: <window.SaveError /> })}
+        {D({ id: 'm-book', label: 'Book Design Call modal', w: 760, h: 620, head: 'Book Design Call',
+          notes: [
+            n(1, <>A <b>one-line summary</b> of the design they'll discuss sits above the embed.</>),
+            n(2, <>Tall placeholder for the <b>Calendly inline embed</b>.</>),
+          ], children: <window.BookModal /> })}
+        {D({ id: 'm-resume', label: 'Resume Design state', h: 920, head: 'Resume Design',
+          notes: [
+            n(1, <>Entry from the <b>saved-design email link</b>. Lands directly on Act 5 with the saved spec pre-loaded.</>),
+            n(2, <>A "Welcome back" banner confirms the design was restored.</>),
+            n(3, <>Spec sheet and ski render from saved values; user can keep exploring or book.</>, true),
+          ], children: <window.ResumeState /> })}
+        {D({ id: 'm-loading', label: 'Output loading (Act 4 → 5)', h: 760, head: 'Loading reveal',
+          notes: [
+            n(1, <>On submit, a <b>2–3 second animated wait</b> with skeleton placeholders before the personality cards and spec populate.</>),
+            n(2, <>Ski silhouette skeleton on the left; card + spec skeletons on the right.</>, true),
+          ], children: <window.LoadingState /> })}
+        {D({ id: 'm-required', label: 'Required-field error', h: 720, head: 'Required field',
+          notes: [
+            n(1, <>Skipping a required field (e.g. name) shows a <b>brief inline message</b> beneath the field, never a full-page block.</>),
+            n(2, <>Field flips to error state; ski panel is unaffected.</>, true),
+          ], children: <window.RequiredError /> })}
+      </DCSection>
+
+      {/* ───────── EXPLORE GRAPHICS ───────── */}
+      <DCSection id="graphics" title="09 · Explore graphics" subtitle="Dense topsheet library — opens from the Act 5 'Explore graphics' CTA, tied to the live ski viewer">
+        {D({ id: 'gfx-d', label: 'Explore graphics / Desktop', w: 1080, h: 760, head: 'Explore graphics',
+          notes: [
+            n(1, <>Opens as a <b>full-screen overlay</b> from the Act 5 topsheet "Explore graphics" CTA. The flow pauses; nothing is lost.</>),
+            n(2, <><b>Live preview (left)</b> keeps the graphic <b>tied to the viewer</b> — it renders on the user's own ski at true scale and updates as they browse.</>),
+            n(3, <><b>Category tabs:</b> House Graphics · Artist Series · James Niehues · Wood Veneers.</>),
+            n(4, <><b>Explore by Pattern and Color</b> — these facets come from <b>Shopify Filters</b>; result count updates live. Library is dense + lazy-loaded.</>),
+            n(5, <>Tiles show the graphic name + its series; selected tile is ringed and reflected in the preview.</>),
+            n(6, <><b>Custom graphics are out of scope here</b> — a soft link defers that to the design call.</>, true),
+          ], children: <window.GraphicsExplorer /> })}
+        {M({ id: 'gfx-m', label: 'Explore graphics / Mobile', h: 1180, head: 'Explore graphics · Mobile',
+          notes: [
+            n(1, <>Preview + selected name pin to the <b>top</b>; category tabs scroll horizontally.</>),
+            n(2, <>Pattern / Color filter pills (Shopify Filters) above a 2-up tile grid.</>),
+            n(3, <><b>Sticky "Use this graphic"</b> bar docks to the bottom.</>, true),
+          ], children: <window.GraphicsExplorerMobile /> })}
+      </DCSection>
+
+    </DesignCanvas>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

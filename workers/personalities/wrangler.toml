@@ -1,0 +1,6 @@
+name = "wagner-skier-dna-personalities"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Deploy: wrangler deploy
+# Set API key: wrangler secret put ANTHROPIC_API_KEY

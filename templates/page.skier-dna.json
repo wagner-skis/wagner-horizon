@@ -1,0 +1,76 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "skier_dna": {
+      "type": "skier-dna",
+      "blocks": {
+        "graphic_category_CmgMhF": {
+          "type": "graphic_category",
+          "settings": {
+            "name": "House Graphics",
+            "collection": "house-graphics"
+          }
+        },
+        "graphic_category_eFYq6k": {
+          "type": "graphic_category",
+          "settings": {
+            "name": "Artist Series",
+            "collection": "artist-series"
+          }
+        },
+        "graphic_category_URwbJz": {
+          "type": "graphic_category",
+          "settings": {
+            "name": "James Niehues",
+            "collection": "james-niehues-collection"
+          }
+        },
+        "graphic_category_ENCytX": {
+          "type": "graphic_category",
+          "settings": {
+            "name": "Wood Veneers",
+            "collection": "wood-veneers"
+          }
+        }
+      },
+      "block_order": [
+        "graphic_category_CmgMhF",
+        "graphic_category_eFYq6k",
+        "graphic_category_URwbJz",
+        "graphic_category_ENCytX"
+      ],
+      "settings": {
+        "heading": "Let's find your ski.",
+        "subhead": "Answer a few questions and watch the ski we'd build for you come to life.",
+        "name_prompt": "First, what should we call you?",
+        "email_save_copy": "We'll email you your design so you don't lose it. No spam.",
+        "micro_cta_label": "Prefer to talk it through? Book a 20-min call.",
+        "gate_copy": "Ready for some personal questions? Optional, but they help us nail the spec.",
+        "accent": "#1a3a5c",
+        "ink": "#0a0a0a",
+        "surface": "#f0eee9",
+        "heading_font": "assistant_n4",
+        "body_font": "assistant_n4",
+        "corner_radius": 8,
+        "show_package_tiers": true,
+        "true_scale_anchor": true,
+        "header_offset": 72,
+        "calendly_url": "https://calendly.com/wagnerskis/skidesign?primary_color=00456d",
+        "klaviyo_list_id": "",
+        "graphics_collection": "graphics",
+        "personalities_api_url": "https://wagner-skier-dna-personalities.brian-lorence.workers.dev"
+      }
+    }
+  },
+  "order": [
+    "skier_dna"
+  ]
+}

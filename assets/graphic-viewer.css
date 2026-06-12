@@ -175,6 +175,14 @@
   display: none;
 }
 
+.graphic-viewer__thumb-img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
 
 /* ─── Stage area ────────────────────────────────────────────── */
 .graphic-viewer__stage-area {

@@ -1,0 +1,7 @@
+docs/
+workers/
+claude.md
+package.json
+readme.md
+.claude/
+.cursor/
