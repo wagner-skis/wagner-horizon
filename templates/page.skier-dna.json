@@ -54,9 +54,7 @@
         "email_save_copy": "We'll email you your design so you don't lose it. No spam.",
         "micro_cta_label": "Prefer to talk it through? Book a 20-min call.",
         "gate_copy": "Ready for some personal questions? Optional, but they help us nail the spec.",
-        "accent": "#1a3a5c",
-        "ink": "#0a0a0a",
-        "surface": "#f0eee9",
+        "color_scheme": "",
         "heading_font": "assistant_n4",
         "body_font": "assistant_n4",
         "corner_radius": 8,
@@ -64,7 +62,7 @@
         "true_scale_anchor": true,
         "header_offset": 72,
         "calendly_url": "https://calendly.com/wagnerskis/skidesign?primary_color=00456d",
-        "klaviyo_list_id": "",
+        "klaviyo_list_id": "VPdqDM",
         "graphics_collection": "graphics",
         "personalities_api_url": "https://wagner-skier-dna-personalities.brian-lorence.workers.dev"
       }
