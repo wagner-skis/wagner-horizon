@@ -1,0 +1,45 @@
+{%- comment -%}
+  Book-call dialog for Skier DNA.
+  Lives OUTSIDE #skier-dna-root so island innerHTML replacements never destroy it.
+  Opened/closed imperatively by skier-dna.js via showDialog() / closeDialog().
+  Parameters: section
+{%- endcomment -%}
+
+<dialog-component id="sd-book-dialog">
+  <dialog
+    class="dialog-modal sd-book-dialog color-{{ section.settings.color_scheme }}"
+    ref="dialog"
+    scroll-lock
+  >
+    <button
+      ref="closeButton"
+      on:click="/closeDialog"
+      class="button button-unstyled close-button sd-book-dialog__close"
+      aria-label="{{ 'accessibility.close_dialog' | t }}"
+    >
+      {{- 'icon-close.svg' | inline_asset_content -}}
+    </button>
+    <div class="sd-book-dialog__header">
+      <div>
+        <h3 class="sd-book-dialog__title h4">Book my design call</h3>
+        <p class="sd-book-dialog__summary"></p>
+      </div>
+    </div>
+    <div class="sd-book-dialog__body">
+      {%- if section.settings.calendly_url != blank -%}
+        <div class="sd-calendly-wrap">
+          <iframe
+            id="sd-book-iframe"
+            src="{{ section.settings.calendly_url | escape }}"
+            frameborder="0"
+            title="Schedule a design call"
+          ></iframe>
+        </div>
+      {%- else -%}
+        <div class="sd-calendly-placeholder">
+          <p class="sd-hint">[ Calendly embed — set the Calendly URL in theme settings ]</p>
+        </div>
+      {%- endif -%}
+    </div>
+  </dialog>
+</dialog-component>

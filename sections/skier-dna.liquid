@@ -20,7 +20,7 @@
   ============================================================================
 {%- endcomment -%}
 
-<div
+<skier-dna-island
   id="skier-dna-root"
   class="color-{{ section.settings.color_scheme }}"
   data-skier-dna
@@ -29,16 +29,13 @@
   data-personalities-url="{{ section.settings.personalities_api_url | escape }}"
   data-show-packages="{{ section.settings.show_package_tiers }}"
   data-true-scale="{{ section.settings.true_scale_anchor }}"
+  data-btn-continue="{{ section.settings.button_style_continue }}"
+  data-btn-back="{{ section.settings.button_style_back }}"
+  data-btn-cta="{{ section.settings.button_style_cta }}"
   {%- if section.settings.graphics_collection != blank %}
   data-graphics-collection="{{ section.settings.graphics_collection }}"
   {%- endif %}
-  style="
-    --sd-radius: {{ section.settings.corner_radius }}px;
-    --sd-font-head: {{ section.settings.heading_font.family }}, {{ section.settings.heading_font.fallback_families }};
-    --sd-font-body: {{ section.settings.body_font.family }}, {{ section.settings.body_font.fallback_families }};
-    --sd-header-offset: {{ section.settings.header_offset }}px;
-    min-height: calc(100svh - var(--sd-header-offset, 72px));
-  "
+  style="--sd-radius: {{ section.settings.corner_radius }}px;"
 >
 
   {%- comment -%} Roland-editable copy + content, handed to the island as JSON {%- endcomment -%}
@@ -50,7 +47,8 @@
         "namePrompt": {{ section.settings.name_prompt | json }},
         "emailSaveCopy": {{ section.settings.email_save_copy | json }},
         "microCtaLabel": {{ section.settings.micro_cta_label | json }},
-        "gateCopy": {{ section.settings.gate_copy | json }}
+        "gateCopy": {{ section.settings.gate_copy | json }},
+        "pageIntro": {{ page.content | default: '' | json }}
       },
       "regions": [
         {%- assign sep = '' -%}
@@ -148,213 +146,14 @@
     <h2>{{ section.settings.heading }}</h2>
     <p>{{ section.settings.subhead }}</p>
   </noscript>
-</div>
+</skier-dna-island>
 
-{%- comment -%}
-  Graphics explorer overlay — lives OUTSIDE #skier-dna-root so root.innerHTML
-  replacements in skier-dna.js never destroy it.
-    Source priority:
-      1. graphic_category blocks — each block is one named collection tab.
-      2. graphics_collection setting — single collection, tabs from product.type.
-    Hidden until skier-dna.js sets overlay.hidden = false.
-  {%- endcomment -%}
+{% render 'skier-dna-gv-overlay', section: section %}
 
-  {%- comment -%} Determine which source mode to use {%- endcomment -%}
-  {%- assign sd_gv_block_count = 0 -%}
-  {%- for block in section.blocks -%}
-    {%- if block.type == 'graphic_category' and block.settings.collection != blank -%}
-      {%- assign sd_gv_block_count = sd_gv_block_count | plus: 1 -%}
-    {%- endif -%}
-  {%- endfor -%}
-
-  {%- if sd_gv_block_count > 0 or section.settings.graphics_collection != blank -%}
-
-    {%- comment -%} Shared toolbar markup captured once {%- endcomment -%}
-    <div id="sd-graphics-overlay" class="sd-gv-overlay" hidden aria-modal="true" role="dialog" aria-label="Explore graphics">
-
-      <graphic-viewer
-        class="graphic-viewer sd-gv-viewer"
-        data-section-id="{{ section.id }}-gv"
-        data-grid-panel-id="sd-gv-grid-{{ section.id }}"
-      >
-
-        <div class="graphic-viewer__toolbar">
-          <button type="button" class="sd-gv-close" aria-label="Close graphics explorer" data-sd-gv-close>
-            <svg viewBox="0 0 18 18" aria-hidden="true" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-              <line x1="3" y1="3" x2="15" y2="15"/><line x1="15" y1="3" x2="3" y2="15"/>
-            </svg>
-          </button>
-          <button type="button" ref="modeBtns[]" class="graphic-viewer__mode-btn" data-mode="viewer"
-            aria-pressed="true" aria-label="Viewer mode" on:click="graphic-viewer/handleModeToggle">
-            <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="7" height="16" rx="1"/><rect x="10" y="1" width="7" height="16" rx="1"/></svg>
-          </button>
-          <button type="button" ref="modeBtns[]" class="graphic-viewer__mode-btn" data-mode="grid"
-            aria-pressed="false" aria-label="Grid mode" on:click="graphic-viewer/handleModeToggle">
-            <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="1" y="1" width="7" height="7" rx="1"/><rect x="10" y="1" width="7" height="7" rx="1"/><rect x="1" y="10" width="7" height="7" rx="1"/><rect x="10" y="10" width="7" height="7" rx="1"/></svg>
-          </button>
-        </div>
-
-        <div class="graphic-viewer__viewer-panel" ref="viewerPanel">
-          <aside class="graphic-viewer__sidebar">
-
-            {%- if sd_gv_block_count > 0 -%}
-              {%- comment -%}
-                Multi-collection mode: one graphic_category block = one filter tab.
-                data-tier = collection handle (stable, unique per block).
-              {%- endcomment -%}
-              <div class="graphic-viewer__filter-row" role="group" aria-label="Category filter">
-                <button type="button" ref="tierBtns[]" class="graphic-viewer__tier-btn"
-                  data-tier="all" aria-pressed="true" on:click="graphic-viewer/handleTierFilter">All</button>
-                {%- for block in section.blocks -%}
-                  {%- if block.type == 'graphic_category' and block.settings.collection != blank -%}
-                    {%- assign sd_gv_col = collections[block.settings.collection] -%}
-                    {%- if sd_gv_col != blank -%}
-                      <button type="button" ref="tierBtns[]" class="graphic-viewer__tier-btn"
-                        data-tier="{{ block.settings.collection | handleize }}"
-                        aria-pressed="false"
-                        on:click="graphic-viewer/handleTierFilter">
-                        {{- block.settings.name | default: sd_gv_col.title -}}
-                      </button>
-                    {%- endif -%}
-                  {%- endif -%}
-                {%- endfor -%}
-              </div>
-
-              <div class="graphic-viewer__thumb-list" role="list" aria-label="Graphics">
-                {%- assign sd_gv_thumb_idx = 0 -%}
-                {%- for block in section.blocks -%}
-                  {%- if block.type == 'graphic_category' and block.settings.collection != blank -%}
-                    {%- assign sd_gv_col = collections[block.settings.collection] -%}
-                    {%- if sd_gv_col != blank -%}
-                      {%- for product in sd_gv_col.products -%}
-                        <div ref="thumbs[]" class="graphic-viewer__thumb" role="button" tabindex="0"
-                          data-handle="{{ product.handle }}"
-                          data-tier="{{ block.settings.collection | handleize }}"
-                          data-image="{{ product.featured_image | image_url: width: 1200 }}"
-                          data-title="{{ product.title | escape }}"
-                          data-collection="{{ block.settings.name | default: sd_gv_col.title | escape }}"
-                          data-price="{{ product.price }}"
-                          data-url="{{ product.url }}"
-                          aria-label="{{ product.title | escape }}"
-                          aria-pressed="{% if sd_gv_thumb_idx == 0 %}true{% else %}false{% endif %}"
-                          on:click="graphic-viewer/handleThumbClick"
-                          on:keydown="graphic-viewer/handleThumbKeydown"
-                        >
-                          {%- if product.featured_image -%}
-                      <img src="{{ product.featured_image | image_url: width: 400 }}"
-                        alt="{{ product.title | escape }}" loading="lazy" width="200" height="200"
-                        class="graphic-viewer__thumb-img">
-                    {%- endif -%}
-                          {%- assign sd_gv_thumb_idx = sd_gv_thumb_idx | plus: 1 -%}
-                        </div>
-                      {%- endfor -%}
-                    {%- endif -%}
-                  {%- endif -%}
-                {%- endfor -%}
-              </div>
-
-            {%- else -%}
-              {%- comment -%}
-                Single-collection fallback: tabs from product.type.
-              {%- endcomment -%}
-              {%- assign sd_gv_col = collections[section.settings.graphics_collection] -%}
-              {%- liquid
-                assign gv_type_list = ''
-                for product in sd_gv_col.products
-                  assign type_key = product.type | handleize
-                  if type_key != blank
-                    assign type_seen = false
-                    assign gv_types_so_far = gv_type_list | split: '|||'
-                    for seen_entry in gv_types_so_far
-                      assign seen_parts = seen_entry | split: '::'
-                      if seen_parts[0] == type_key
-                        assign type_seen = true
-                      endif
-                    endfor
-                    unless type_seen
-                      unless gv_type_list == ''
-                        assign gv_type_list = gv_type_list | append: '|||'
-                      endunless
-                      assign gv_type_list = gv_type_list | append: type_key | append: '::' | append: product.type
-                    endunless
-                  endif
-                endfor
-                assign gv_unique_types = gv_type_list | split: '|||'
-              -%}
-              {%- if gv_unique_types.size > 0 -%}
-                <div class="graphic-viewer__filter-row" role="group" aria-label="Category filter">
-                  <button type="button" ref="tierBtns[]" class="graphic-viewer__tier-btn"
-                    data-tier="all" aria-pressed="true" on:click="graphic-viewer/handleTierFilter">All</button>
-                  {%- for type_entry in gv_unique_types -%}
-                    {%- assign type_parts = type_entry | split: '::' -%}
-                    <button type="button" ref="tierBtns[]" class="graphic-viewer__tier-btn"
-                      data-tier="{{ type_parts[0] }}" aria-pressed="false"
-                      on:click="graphic-viewer/handleTierFilter">{{ type_parts[1] }}</button>
-                  {%- endfor -%}
-                </div>
-              {%- endif -%}
-              <div class="graphic-viewer__thumb-list" role="list" aria-label="Graphics">
-                {%- for product in sd_gv_col.products -%}
-                  <div ref="thumbs[]" class="graphic-viewer__thumb" role="button" tabindex="0"
-                    data-handle="{{ product.handle }}"
-                    data-tier="{{ product.type | handleize }}"
-                    data-image="{{ product.featured_image | image_url: width: 1200 }}"
-                    data-title="{{ product.title | escape }}"
-                    data-collection="{{ product.type | escape }}"
-                    data-price="{{ product.price }}"
-                    data-url="{{ product.url }}"
-                    aria-label="{{ product.title | escape }}"
-                    aria-pressed="{% if forloop.first %}true{% else %}false{% endif %}"
-                    on:click="graphic-viewer/handleThumbClick"
-                    on:keydown="graphic-viewer/handleThumbKeydown"
-                  >
-                    {%- if product.featured_image -%}
-                      <img src="{{ product.featured_image | image_url: width: 400 }}"
-                        alt="{{ product.title | escape }}" loading="lazy" width="200" height="200"
-                        class="graphic-viewer__thumb-img">
-                    {%- endif -%}
-                  </div>
-                {%- endfor -%}
-              </div>
-            {%- endif -%}
-
-          </aside>
-
-          <div class="graphic-viewer__stage-area">
-            <div class="graphic-viewer__metadata" aria-live="polite" aria-atomic="true">
-              <span class="graphic-viewer__metadata-series" ref="metaSeries"></span>
-              <span class="graphic-viewer__metadata-name" ref="metaName"></span>
-            </div>
-            <div class="graphic-viewer__stage" ref="stage" aria-hidden="true">
-              <div class="graphic-viewer__stage-layer" ref="stageLayers[]" data-layer="a"></div>
-              <div class="graphic-viewer__stage-layer" ref="stageLayers[]" data-layer="b"></div>
-            </div>
-            <div class="graphic-viewer__info-strip">
-              <div class="graphic-viewer__msrp">
-                <span class="graphic-viewer__msrp-label">MSRP Starting At</span>
-                <span class="graphic-viewer__msrp-value" ref="msrpValue"></span>
-              </div>
-              <div class="graphic-viewer__actions">
-                <a ref="ctaPrimary" class="graphic-viewer__cta graphic-viewer__cta--primary" href="#">Customize This Pair</a>
-                <a ref="ctaSecondary" class="graphic-viewer__cta graphic-viewer__cta--secondary" href="#">Technical Specs</a>
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </graphic-viewer>
-
-      <div id="sd-gv-grid-{{ section.id }}" hidden></div>
-
-    </div>
-
-    {{ 'graphic-viewer.css' | asset_url | stylesheet_tag }}
-    <script type="module">import '{{ 'graphic-viewer.js' | asset_url }}';</script>
-
-{%- endif -%}
+{% render 'skier-dna-book-dialog', section: section %}
 
 {{ 'skier-dna.css' | asset_url | stylesheet_tag }}
-<script src="{{ 'skier-dna.js' | asset_url }}" defer></script>
+<script type="module">import '@theme/skier-dna';</script>
 
 {% schema %}
 {
@@ -371,15 +170,42 @@
     { "type": "textarea", "id": "gate_copy", "label": "Act 4 gate copy", "default": "Ready for some personal questions? Optional, but they help us nail the spec." },
 
     { "type": "color_scheme", "id": "color_scheme", "label": "Color scheme", "default": "scheme-1" },
-    { "type": "header", "content": "Typography & shape" },
-    { "type": "font_picker", "id": "heading_font", "label": "Heading font", "default": "assistant_n4" },
-    { "type": "font_picker", "id": "body_font", "label": "Body font", "default": "assistant_n4" },
+    { "type": "header", "content": "Button styles" },
+    {
+      "type": "select", "id": "button_style_continue", "label": "Continue \/ CTA buttons",
+      "info": "Applies to Continue, See My Design, Book Call, and save actions",
+      "options": [
+        { "value": "theme_primary",   "label": "Theme primary button" },
+        { "value": "theme_secondary", "label": "Theme secondary button" },
+        { "value": "text",            "label": "Text link" }
+      ],
+      "default": "theme_primary"
+    },
+    {
+      "type": "select", "id": "button_style_back", "label": "Back \/ navigation buttons",
+      "options": [
+        { "value": "theme_secondary", "label": "Theme secondary button" },
+        { "value": "theme_primary",   "label": "Theme primary button" },
+        { "value": "text",            "label": "Text link" }
+      ],
+      "default": "theme_secondary"
+    },
+    {
+      "type": "select", "id": "button_style_cta", "label": "Secondary CTA buttons",
+      "info": "Applies to Email Me This Design and similar secondary calls-to-action",
+      "options": [
+        { "value": "theme_secondary", "label": "Theme secondary button" },
+        { "value": "theme_primary",   "label": "Theme primary button" },
+        { "value": "text",            "label": "Text link" }
+      ],
+      "default": "theme_secondary"
+    },
+    { "type": "header", "content": "Shape" },
     { "type": "range", "id": "corner_radius", "label": "Corner radius", "min": 0, "max": 24, "step": 1, "unit": "px", "default": 8 },
 
     { "type": "header", "content": "Behavior" },
     { "type": "checkbox", "id": "show_package_tiers", "label": "Show recommended package tag in Act 5", "default": true },
     { "type": "checkbox", "id": "true_scale_anchor", "label": "Show true-scale body silhouette (Act 4)", "default": true },
-    { "type": "range", "id": "header_offset", "label": "Theme header height (reserve so acts sit below sticky nav)", "min": 0, "max": 160, "step": 4, "unit": "px", "default": 72 },
 
     { "type": "header", "content": "Integrations" },
     { "type": "url", "id": "calendly_url", "label": "Calendly event URL" },

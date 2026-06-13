@@ -23,6 +23,13 @@ function buildPrompt(skier, builds) {
     skier.weight  ? 'Weight: '  + skier.weight  : '',
   ].filter(Boolean).join('\n');
 
+  var words = [
+    skier.currentSki           ? 'Current ski: '           + skier.currentSki           : '',
+    skier.currentSkiLikes      ? 'What they love: '        + skier.currentSkiLikes      : '',
+    skier.currentSkiImprovements ? 'Where it falls short: ' + skier.currentSkiImprovements : '',
+    skier.personalNotes        ? 'Anything else: '         + skier.personalNotes        : '',
+  ].filter(Boolean).join('\n');
+
   var buildsText = builds.map(function (b, i) {
     var mats = (b.materials || []).map(function (m) {
       var tags = m.tags && m.tags.length ? ' (' + m.tags.join(', ') + ')' : '';
@@ -31,21 +38,33 @@ function buildPrompt(skier, builds) {
     return 'Build ' + (i + 1) + ':\n' + (mats || '  (no materials specified)');
   }).join('\n\n');
 
-  return [
+  var sections = [
     'SKIER PROFILE:',
     profile,
+  ];
+
+  if (words) {
+    sections.push('', 'SKIER\'S OWN WORDS:', words);
+  }
+
+  sections.push(
     '',
-    'THREE CUSTOM BUILDS:',
+    'THREE CUSTOM BUILDS (algorithmically selected):',
     buildsText,
     '',
-    'For each build, write:',
-    '- name: A short, evocative personality name (2–4 words, no article "The"). Examples: "Glacier Hunter", "Deep Powder Scout", "Spring Predator", "Iron Grip Carver"',
-    '- tagline: One punchy sentence under 8 words that captures the essential feel',
-    '- desc: Exactly two sentences in second person (you/your). First sentence: how this ski feels underfoot and what it does instinctively. Second sentence: the specific terrain or conditions where it truly comes alive. Be sensory and precise — no vague superlatives.',
+    'Using the skier profile' + (words ? ' AND their own words' : '') + ':',
+    '1. Review the material selections for each build against what the skier has described about their experience and preferences. If any material stands out as particularly right or wrong for this specific person, capture that insight in materialNote (one sentence max, or null if nothing notable).',
+    '2. For each build, write:',
+    '   - name: A short, evocative personality name (2–4 words, no article "The"). Examples: "Glacier Hunter", "Deep Powder Scout", "Spring Predator", "Iron Grip Carver"',
+    '   - tagline: One punchy sentence under 8 words that captures the essential feel',
+    '   - desc: Exactly two sentences in second person (you/your). First sentence: how this ski feels underfoot and what it does instinctively. Second sentence: the specific terrain or conditions where it truly comes alive. Be sensory and precise — no vague superlatives.',
+    '   - materialNote: One sentence connecting a specific material choice to what the skier described, or null',
     '',
     'Return ONLY a valid JSON object — no markdown fences, no preamble, no trailing text:',
-    '{"personalities":[{"name":"...","tagline":"...","desc":"..."},{"name":"...","tagline":"...","desc":"..."},{"name":"...","tagline":"...","desc":"..."}]}',
-  ].join('\n');
+    '{"personalities":[{"name":"...","tagline":"...","desc":"...","materialNote":null},{"name":"...","tagline":"...","desc":"...","materialNote":"..."},{"name":"...","tagline":"...","desc":"...","materialNote":null}]}'
+  );
+
+  return sections.join('\n');
 }
 
 var DEV_ORIGINS = ['http://localhost:9292', 'http://127.0.0.1:9292'];
@@ -90,7 +109,7 @@ export default {
       },
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
-        max_tokens: 1024,
+        max_tokens: 1280,
         system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: buildPrompt(body.skier || {}, body.builds || []) }],
       }),

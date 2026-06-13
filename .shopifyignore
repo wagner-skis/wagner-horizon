@@ -5,3 +5,4 @@ package.json
 readme.md
 .claude/
 .cursor/
+workers/
