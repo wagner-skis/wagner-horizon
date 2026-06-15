@@ -55,16 +55,18 @@
         "micro_cta_label": "Prefer to talk it through? Book a 20-min call.",
         "gate_copy": "Ready for some personal questions? Optional, but they help us nail the spec.",
         "color_scheme": "",
-        "heading_font": "assistant_n4",
-        "body_font": "assistant_n4",
+        "button_style_continue": "theme_primary",
+        "button_style_back": "theme_secondary",
+        "button_style_cta": "theme_secondary",
         "corner_radius": 8,
         "show_package_tiers": true,
         "true_scale_anchor": true,
-        "header_offset": 72,
         "calendly_url": "https://calendly.com/wagnerskis/skidesign?primary_color=00456d",
-        "klaviyo_list_id": "VPdqDM",
+        "klaviyo_list_id": "S2Urfh",
         "graphics_collection": "graphics",
-        "personalities_api_url": "https://wagner-skier-dna-personalities.brian-lorence.workers.dev"
+        "personalities_api_url": "https://wagner-skier-dna-api.brian-lorence.workers.dev/api/personalities",
+        "worker_token": "18aeffd2619f46abcb585c3b4f5da3b9403f6a72a60f8f9afa7737f02bcab4a3",
+        "api_base_url": "https://wagner-skier-dna-api.brian-lorence.workers.dev"
       }
     }
   },

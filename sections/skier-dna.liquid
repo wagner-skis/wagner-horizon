@@ -1,22 +1,17 @@
 {%- comment -%}
   ============================================================================
-  Skier DNA — Online Store 2.0 section scaffold
+  Skier DNA — theme section mount point
   ============================================================================
-  This is a THEME SECTION version of the Skier DNA mount point. It is the
-  fastest way to prototype the schema (settings + blocks) in a dev theme.
+  The five acts are client-side state inside <skier-dna-island> (skier-dna.js).
+  The blocks below are merchant-editable content collections (regions, day
+  types, terrain cards, package tiers, graphic categories) configurable in the
+  theme editor.
 
-  PROMOTION TO A THEME APP EXTENSION APP BLOCK (do this once the app backend
-  exists — it is what the experience actually ships as, because it needs
-  server-side persistence + Klaviyo + Calendly + pre-generated copy):
-    1. Move this file to  extensions/skier-dna/blocks/skier-dna.liquid
-    2. Keep the {% schema %} settings + blocks EXACTLY as-is — they transfer 1:1.
-    3. Replace `section.settings`/`section.blocks` with `block.settings`/
-       `block.blocks`, and the `{% schema %}` "name"/"presets" with app-block
-       equivalents (target: "section").
-    4. Serve assets/skier-dna.js from the extension's assets/ folder.
-  The five acts themselves are NEVER Liquid blocks — they are client app state
-  inside #skier-dna-root. The blocks below are only the merchant-editable
-  CONTENT COLLECTIONS, so Roland can re-image/re-order cards in the editor.
+  Integrations configured via section settings:
+    • personalities_api_url — Cloudflare Worker → Claude Haiku narrative names
+    • api_base_url          — /api/designs backend (set once backend is live)
+    • klaviyo_list_id       — email capture list
+    • calendly_url          — book-a-call iframe
   ============================================================================
 {%- endcomment -%}
 
@@ -24,9 +19,13 @@
   id="skier-dna-root"
   class="color-{{ section.settings.color_scheme }}"
   data-skier-dna
+  data-shopify-customer-id="{{ customer.id | default: '' }}"
+  data-shopify-customer-email="{{ customer.email | default: '' | escape }}"
   data-calendly-url="{{ section.settings.calendly_url | escape }}"
   data-klaviyo-list="{{ section.settings.klaviyo_list_id | escape }}"
   data-personalities-url="{{ section.settings.personalities_api_url | escape }}"
+  data-worker-token="{{ section.settings.worker_token | escape }}"
+  data-api-base="{{ section.settings.api_base_url | escape }}"
   data-show-packages="{{ section.settings.show_package_tiers }}"
   data-true-scale="{{ section.settings.true_scale_anchor }}"
   data-btn-continue="{{ section.settings.button_style_continue }}"
@@ -110,6 +109,20 @@
               {%- assign sep = ',' -%}
               {%- assign sd_fg_count = sd_fg_count | plus: 1 -%}
             {%- endif -%}
+          {%- endfor -%}
+        {%- endif -%}
+      ],
+      "savedDesigns": [
+        {%- if customer and customer.metafields.skier_dna.designs -%}
+          {%- assign sd_design_sep = '' -%}
+          {%- for d in customer.metafields.skier_dna.designs.value -%}
+            {{ sd_design_sep }}{
+              "id":          {{ d.handle | json }},
+              "label":       {{ d.label.value | default: 'Custom design' | json }},
+              "personality": {{ d.personality_name.value | default: '' | json }},
+              "createdAt":   {{ d.created_at.value | default: '' | json }}
+            }
+            {%- assign sd_design_sep = ',' -%}
           {%- endfor -%}
         {%- endif -%}
       ],
@@ -211,7 +224,9 @@
     { "type": "url", "id": "calendly_url", "label": "Calendly event URL" },
     { "type": "text", "id": "klaviyo_list_id", "label": "Klaviyo list ID" },
     { "type": "collection", "id": "graphics_collection", "label": "Topsheet graphics collection" },
-    { "type": "text", "id": "personalities_api_url", "label": "Personalities AI endpoint URL", "info": "Cloudflare Worker URL for AI-generated personality names and descriptions. Leave blank to use static copy." }
+    { "type": "text", "id": "personalities_api_url", "label": "Personalities AI endpoint URL", "info": "Cloudflare Worker URL for AI-generated personality names and descriptions. Leave blank to use static copy." },
+    { "type": "text", "id": "worker_token", "label": "Worker auth token", "info": "Matches the WORKER_TOKEN secret set on the Cloudflare Worker. Prevents unauthorized calls to the personalities endpoint." },
+    { "type": "text", "id": "api_base_url", "label": "Design save API base URL", "info": "Base URL for the /api/designs backend. Leave blank until the backend is deployed — saves will show a pending-confirmation message instead." }
   ],
   "blocks": [
     {

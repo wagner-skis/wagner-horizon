@@ -4,3 +4,5 @@ compatibility_date = "2025-01-01"
 
 # Deploy: wrangler deploy
 # Set API key: wrangler secret put ANTHROPIC_API_KEY
+# Set shared secret: wrangler secret put WORKER_TOKEN  (any random string, e.g. openssl rand -hex 32)
+# Then set the same value as "Worker auth token" in the Skier DNA section settings in the Shopify theme editor.

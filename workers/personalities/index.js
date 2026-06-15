@@ -91,6 +91,14 @@ export default {
       return new Response('Method not allowed', { status: 405, headers: cors });
     }
 
+    // Shared-secret check — set via: wrangler secret put WORKER_TOKEN
+    if (env.WORKER_TOKEN) {
+      var token = request.headers.get('X-Worker-Token') || '';
+      if (token !== env.WORKER_TOKEN) {
+        return new Response('Unauthorized', { status: 401, headers: cors });
+      }
+    }
+
     var body;
     try {
       body = await request.json();

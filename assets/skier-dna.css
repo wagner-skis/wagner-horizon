@@ -1181,6 +1181,43 @@
   opacity: 1;
 }
 
+/* ── design picker ────────────────────────────────────────────────────────── */
+.sd-act--picker {
+  padding: var(--padding-xl, 48px) var(--padding-lg, 32px);
+}
+.sd-picker-col {
+  max-width: 680px;
+  margin: 0 auto;
+}
+.sd-design-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+.sd-design-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border: 1px solid color-mix(in srgb, var(--sd-ink) 12%, transparent);
+  border-radius: var(--sd-radius, 8px);
+  background: color-mix(in srgb, var(--sd-ink) 2%, transparent);
+}
+.sd-design-row + .sd-design-row { margin-top: 8px; }
+.sd-design-row-info { flex: 1; min-width: 0; }
+.sd-design-row-label {
+  font-weight: 600;
+  font-size: 15px;
+  line-height: 1.3;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* ── delta feedback message ───────────────────────────────────────────────── */
 .sd-delta-msg {
   font-size: 12px;

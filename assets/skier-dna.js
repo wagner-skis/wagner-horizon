@@ -23,7 +23,7 @@ function btnCls(style) {
 // ── session persistence ────────────────────────────────────────────────────────
 const STORAGE_KEY = 'sd_dna_v1';
 const PERSIST_KEYS = [
-  'act', 'name', 'regions', 'dayTypes', 'terrain', 'stability',
+  'act', 'name', 'email', 'klaviyoOptIn', 'regions', 'dayTypes', 'terrain', 'stability',
   'currentSki', 'currentSkiLikes', 'currentSkiImprovements',
   'bindings', 'heightVal', 'heightUnit', 'heightIn', 'weightVal', 'weightUnit',
   'age', 'bsl', 'ability', 'personalNotes',
@@ -81,13 +81,17 @@ function makeState() {
     personality: 0,
     selectedLength: 179, selectedWaist: 101, selectedCamber: 'medium',
     email: '', klaviyoOptIn: false,
+    emailSuggestion: null,
     saveState: 'idle',
     saveModalOpen: false,
+    saveIsNew: false,
     resumeBanner: false,
     resumeSource: '',
     errors: {},
     _specInited: false,
     designId: null,
+    savedDesigns: [],
+    showDesignPicker: false,
   };
 }
 
@@ -440,6 +444,73 @@ function computePersonalities(state, spec, materials) {
   ];
 }
 
+// ── multi-design helpers ────────────────────────────────────────────────────────
+function startNewDesign(state) {
+  const keep = {
+    email:         state.email,
+    klaviyoOptIn:  state.klaviyoOptIn,
+    savedDesigns:  state.savedDesigns,
+  };
+  Object.assign(state, makeState(), keep);
+  state.designId        = null;
+  state.showDesignPicker = false;
+  state.act             = 1;
+}
+
+function openDesign(state, config, designId, scheduleRender) {
+  const apiBase = config.settings?.apiBase || '';
+  if (!apiBase) return;
+  const savedDesigns = state.savedDesigns;
+  fetch(`${apiBase}/api/designs/${encodeURIComponent(designId)}`)
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data || !data.state) return;
+      Object.assign(state, data.state);
+      state.savedDesigns    = savedDesigns;
+      state.designId        = designId;
+      state.showDesignPicker = false;
+      state.act             = 5;
+      scheduleRender();
+    })
+    .catch(() => {});
+}
+
+function renderDesignPicker(state, config) {
+  const designs = state.savedDesigns || [];
+  const rows = designs.map(d => {
+    let dateStr = '';
+    if (d.createdAt) {
+      try { dateStr = new Date(d.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); }
+      catch (e) { dateStr = d.createdAt; }
+    }
+    return `
+      <div class="sd-design-row">
+        <div class="sd-design-row-info">
+          <div class="sd-design-row-label">${esc(d.label || 'Custom design')}</div>
+          ${d.personality ? `<div class="sd-body">${esc(d.personality)}</div>` : ''}
+          ${dateStr ? `<div class="sd-hint">${esc(dateStr)}</div>` : ''}
+        </div>
+        <button class="sd-btn sd-btn--ghost sd-btn--sm" data-sd-action="open-design" data-value="${esc(d.id)}">
+          Edit →
+        </button>
+      </div>`;
+  }).join('');
+
+  return `
+    <div class="sd-act sd-act--picker">
+      <div class="sd-picker-col">
+        <div class="sd-eyebrow">Welcome back</div>
+        <h1 class="sd-h1">Your saved designs</h1>
+        <p class="sd-body">Pick up where you left off, or start something new.</p>
+        <div class="sd-design-list">${rows}</div>
+        <hr class="sd-divider"/>
+        <button class="sd-btn ${btnCls(config.settings.buttonContinue)}" data-sd-action="new-design">
+          + Start a new design
+        </button>
+      </div>
+    </div>`;
+}
+
 // ── sub-header ─────────────────────────────────────────────────────────────────
 const ACT_LABELS = ['Hello', 'Where & when', 'Feel', 'You', 'Your design'];
 
@@ -467,10 +538,17 @@ function renderSubHeader(state, copy) {
 
 // ── Act 1 ──────────────────────────────────────────────────────────────────────
 function renderAct1(state, config) {
-  const copy    = config.copy || {};
-  const hasName = state.name.trim().length > 0;
-  const errHtml = state.errors.name
+  const copy     = config.copy || {};
+  const hasName  = state.name.trim().length > 0;
+  const hasEmail = state.email.trim().length > 0;
+  const canContinue = hasName && hasEmail;
+  const nameErrHtml  = state.errors.name
     ? `<div class="sd-alert" role="alert">${esc(state.errors.name)}</div>` : '';
+  const emailErrHtml = state.errors.email
+    ? `<div class="sd-alert" role="alert">${esc(state.errors.email)}</div>` : '';
+  const savedDesignHint = (state.savedDesigns && state.savedDesigns.length > 0)
+    ? '<p class="sd-hint" style="margin-top:6px">Use the same email address as your saved designs to keep them connected.</p>'
+    : '';
   return `
     <div class="sd-act sd-act--1">
       <div class="sd-split">
@@ -484,11 +562,19 @@ function renderAct1(state, config) {
             <input id="sd-name" class="sd-input${state.errors.name ? ' is-error' : ''}"
               type="text" autocomplete="given-name" placeholder="Type your name…"
               value="${esc(state.name)}" data-sd-action="name" autofocus/>
-            ${errHtml}
+            ${nameErrHtml}
+          </div>
+          <div class="sd-field" style="margin-top:16px">
+            <label class="sd-label" for="sd-email-act1">Email address</label>
+            ${savedDesignHint}
+            <input id="sd-email-act1" class="sd-input${state.errors.email ? ' is-error' : ''}"
+              type="email" autocomplete="email" placeholder="you@email.com"
+              value="${esc(state.email)}" data-sd-action="email"/>
+            ${emailErrHtml}
           </div>
           <div class="sd-btn-row" style="margin-top:28px">
             <button class="sd-btn ${btnCls(config.settings.buttonContinue)}" data-sd-action="act1-continue"
-              ${!hasName ? 'disabled aria-disabled="true"' : ''}>Continue →</button>
+              ${!canContinue ? 'disabled aria-disabled="true"' : ''}>Continue →</button>
           </div>
         </div>
         <div class="sd-ski-col">
@@ -1022,11 +1108,15 @@ function renderAct5(state, config, spec) {
             <button class="sd-btn ${btnCls(config.settings.buttonContinue)} sd-btn--lg" data-sd-action="open-book">Book my design call</button>
             <button class="sd-btn ${btnCls(config.settings.buttonCta)} sd-btn--lg" data-sd-action="open-save">Email me this design</button>
           </div>
+          <div style="text-align:center;margin-top:12px">
+            <button class="sd-btn sd-btn--link" data-sd-action="new-design">Start a new design →</button>
+          </div>
         </div>
       </div>
       <div class="sd-sticky-cta">
         <button class="sd-btn ${btnCls(config.settings.buttonContinue)} sd-btn--block" data-sd-action="open-book">Book my design call</button>
         <button class="sd-btn sd-btn--link" data-sd-action="open-save">Email me this design</button>
+        <button class="sd-btn sd-btn--link" data-sd-action="new-design">Start a new design →</button>
       </div>
     </div>`;
 }
@@ -1036,31 +1126,55 @@ function renderSaveModal(state, config) {
   const copy = config.copy || {};
   let body;
   if (state.saveState === 'saved') {
+    const savedHeading = state.saveIsNew ? 'Your new design is saved.' : 'Your design has been updated.';
     body = `
       <div class="sd-modal-confirm">
         <div class="sd-confirm-icon" aria-hidden="true">✓</div>
-        <h3 class="sd-h3">Saved. Check your inbox.</h3>
+        <h3 class="sd-h3">${esc(savedHeading)}</h3>
         <p class="sd-body">We've emailed your design to ${esc(state.email)}.</p>
         <button class="sd-btn ${btnCls(config.settings.buttonBack)}" data-sd-action="close-save">Done</button>
+      </div>`;
+  } else if (state.saveState === 'pending') {
+    body = `
+      <div class="sd-modal-confirm">
+        <div class="sd-confirm-icon" aria-hidden="true">✓</div>
+        <h3 class="sd-h3">Got it — we'll be in touch.</h3>
+        <p class="sd-body">We've noted your email at ${esc(state.email)}. A Wagner team member will follow up with your design.</p>
+        <button class="sd-btn ${btnCls(config.settings.buttonBack)}" data-sd-action="close-save">Done</button>
+      </div>`;
+  } else if (state.saveState === 'error') {
+    body = `
+      <div class="sd-modal-confirm">
+        <div class="sd-alert" role="alert">Something went wrong — please try again.</div>
+        <button class="sd-btn ${btnCls(config.settings.buttonContinue)} sd-btn--block" data-sd-action="save-submit">Try again</button>
+        <div style="text-align:center">
+          <button class="sd-btn sd-btn--link" data-sd-action="close-save">Maybe later</button>
+        </div>
+      </div>`;
+  } else if (state.saveState === 'saving') {
+    body = `
+      <div class="sd-modal-confirm">
+        <p class="sd-body sd-loading-hint" style="text-align:center">Saving your design<span class="sd-loading-dots"><span>.</span><span>.</span><span>.</span></span></p>
       </div>`;
   } else {
     const errHtml = state.errors.email
       ? `<div class="sd-alert" role="alert">${esc(state.errors.email)}</div>` : '';
+    const suggHtml = (!state.errors.email && state.emailSuggestion)
+      ? `<div class="sd-email-suggest">Did you mean <strong>${esc(state.emailSuggestion)}</strong>? <button type="button" class="sd-btn sd-btn--link" data-sd-action="accept-suggestion">Use this</button></div>` : '';
     body = `
       <div class="sd-field">
         <label class="sd-label" for="sd-email">Email address</label>
         <input id="sd-email" class="sd-input${state.errors.email?' is-error':''}"
-          type="email" inputmode="email" autocomplete="email" placeholder="you@email.com"
+          type="email" required inputmode="email" autocomplete="email" placeholder="you@email.com"
           value="${esc(state.email)}" data-sd-action="email"/>
-        ${errHtml}
+        ${errHtml}${suggHtml}
       </div>
       <label class="sd-check-row">
         <input type="checkbox" class="sd-checkbox" data-sd-action="klaviyo-opt"${state.klaviyoOptIn?' checked':''}/>
         <span class="sd-body">Send me occasional ski news and offers.</span>
       </label>
-      <button class="sd-btn ${btnCls(config.settings.buttonContinue)} sd-btn--block" data-sd-action="save-submit"
-        ${state.saveState==='saving'?' disabled':''}>
-        ${state.saveState==='saving' ? 'Saving…' : 'Save and email me'}
+      <button class="sd-btn ${btnCls(config.settings.buttonContinue)} sd-btn--block" data-sd-action="save-submit">
+        Save and email me
       </button>
       <div style="text-align:center">
         <button class="sd-btn sd-btn--link" data-sd-action="close-save">Maybe later</button>
@@ -1097,7 +1211,9 @@ function render(root, state, config) {
   }
 
   let actHtml = '';
-  if (state.loading) {
+  if (state.showDesignPicker) {
+    actHtml = renderDesignPicker(state, config);
+  } else if (state.loading) {
     actHtml = renderLoading(state.loadingExtended);
   } else {
     switch (state.act) {
@@ -1164,13 +1280,22 @@ function dispatch(e, root, state, config, scheduleRender) {
     case 'name': {
       state.name = target.value;
       const btn = root.querySelector('[data-sd-action="act1-continue"]');
-      if (btn) { btn.disabled = !state.name.trim(); btn.setAttribute('aria-disabled', btn.disabled ? 'true' : 'false'); }
+      if (btn) {
+        const ok = state.name.trim().length > 0 && state.email.trim().length > 0;
+        btn.disabled = !ok;
+        btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
+      }
       return;
     }
-    case 'act1-continue':
-      if (!state.name.trim()) { state.errors.name = 'We just need a first name to continue.'; }
-      else { state.errors = {}; state.act = 2; root.scrollTo(0, 0); }
+    case 'act1-continue': {
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      const act1Errs = {};
+      if (!state.name.trim())             act1Errs.name  = 'We just need a first name to continue.';
+      if (!emailRe.test(state.email.trim())) act1Errs.email = 'Please enter a valid email address.';
+      if (Object.keys(act1Errs).length) { state.errors = act1Errs; break; }
+      state.errors = {}; state.act = 2; root.scrollTo(0, 0); fireAnalytics('act_transition', { to: 2 }); syncDna(state, config);
       break;
+    }
 
     case 'back':
       if (state.act === 5) { state.personalityNarratives = null; state.personalityNarrativesLoading = false; state._specInited = false; state._activePlayField = null; }
@@ -1207,6 +1332,8 @@ function dispatch(e, root, state, config, scheduleRender) {
       state.errors = {};
       state.act    = 3;
       root.scrollTo(0, 0);
+      fireAnalytics('act_transition', { to: 3 });
+      syncDna(state, config);
       break;
     }
     case 'stability':
@@ -1221,7 +1348,7 @@ function dispatch(e, root, state, config, scheduleRender) {
     case 'ski-improve': state.currentSkiImprovements = target.value; return;
 
     case 'bindings':      state.bindings = value; break;
-    case 'act3-continue': state.act = 4; state.errors = {}; root.scrollTo(0, 0); break;
+    case 'act3-continue': state.act = 4; state.errors = {}; root.scrollTo(0, 0); fireAnalytics('act_transition', { to: 4 }); syncDna(state, config); break;
 
     case 'height':      state.heightVal  = target.value; if (state.errors.height) delete state.errors.height; return;
     case 'height-in':   state.heightIn   = target.value; if (state.errors.height) delete state.errors.height; return;
@@ -1259,6 +1386,7 @@ function dispatch(e, root, state, config, scheduleRender) {
         state.act = 5; state._specInited = false;
         scheduleRender();
         fireAnalytics('act_transition', { to: 5 });
+        syncDna(state, config);
       };
       setTimeout(() => {
         gate.timer = true;
@@ -1269,7 +1397,7 @@ function dispatch(e, root, state, config, scheduleRender) {
       return;
     }
 
-    case 'personality':     state.personality    = parseInt(value, 10); break;
+    case 'personality':     state.personality    = parseInt(value, 10); fireAnalytics('personality_select', { index: state.personality }); break;
     case 'camber':          state._activePlayField = 'camber'; state.selectedCamber = value; break;
     case 'selected-length': state._activePlayField = 'length'; state.selectedLength = parseInt(target.value, 10); break;
     case 'selected-waist':  state._activePlayField = 'waist';  state.selectedWaist  = parseInt(target.value, 10); break;
@@ -1282,7 +1410,19 @@ function dispatch(e, root, state, config, scheduleRender) {
       return;
     }
 
-    case 'open-save':  state.saveModalOpen = true;  state.saveState = 'idle'; state.errors = {}; break;
+    case 'new-design':  startNewDesign(state); break;
+    case 'open-design': openDesign(state, config, value, scheduleRender); return;
+
+    case 'open-save':
+      state.saveModalOpen = true;
+      state.errors = {};
+      if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.email)) {
+        // Email already captured in Act 1 — save immediately, skip the form
+        handleSave(state, config, scheduleRender);
+        return;
+      }
+      state.saveState = 'idle';
+      break;
     case 'close-save': state.saveModalOpen = false; state.errors = {}; break;
 
     case 'open-book': {
@@ -1318,16 +1458,36 @@ function dispatch(e, root, state, config, scheduleRender) {
       return;
     }
 
-    case 'email':       state.email       = target.value;   return;
+    case 'email': {
+      state.email = target.value; state.emailSuggestion = null;
+      if (state.act === 1) {
+        const btn = root.querySelector('[data-sd-action="act1-continue"]');
+        if (btn) {
+          const ok = state.name.trim().length > 0 && state.email.trim().length > 0;
+          btn.disabled = !ok;
+          btn.setAttribute('aria-disabled', ok ? 'false' : 'true');
+        }
+      }
+      return;
+    }
     case 'klaviyo-opt': state.klaviyoOptIn = target.checked; return;
     case 'save-submit': handleSave(state, config, scheduleRender); return;
     case 'close-resume': state.resumeBanner = false; break;
+    case 'accept-suggestion':
+      if (state.emailSuggestion) { state.email = state.emailSuggestion; state.emailSuggestion = null; }
+      break;
 
     default: return;
   }
 
   scheduleRender();
 }
+
+const EMAIL_ERR = {
+  invalid_syntax: 'Please enter a valid email address.',
+  disposable:     'Please use a permanent email address.',
+  undeliverable:  "We couldn't reach that email domain — please check it.",
+};
 
 function handleSave(state, config, scheduleRender) {
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -1336,29 +1496,91 @@ function handleSave(state, config, scheduleRender) {
     scheduleRender();
     return;
   }
+  state.saveIsNew = !state.designId;
   state.errors = {}; state.saveState = 'saving';
   scheduleRender();
   fireAnalytics('save_design', { klaviyo_opt: state.klaviyoOptIn });
 
-  const apiBase = window.SkierDNAApiBase || '';
+  const apiBase = config.settings?.apiBase || '';
   if (apiBase) {
-    const spec = computeSpec(state);
     fetch(`${apiBase}/api/designs`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        email: state.email, klaviyo_opt: state.klaviyoOptIn,
-        klaviyo_list_id: config.settings?.klaviyoListId || '',
-        name: state.name, spec, personality: state.personality,
-        answers: { regions: state.regions, dayTypes: state.dayTypes, terrain: state.terrain, stability: state.stability, bindings: state.bindings, height: state.heightVal, weight: state.weightVal, ability: state.ability },
+        email:               state.email,
+        klaviyo_opt:         state.klaviyoOptIn,
+        klaviyo_list_id:     config.settings?.klaviyoListId || '',
+        shopify_customer_id: config.settings?.shopifyCustomerId || '',
+        state:               state,
+        spec:                computeSpec(state),
       }),
     })
-      .then(r => r.json())
-      .then(data => { state.saveState = 'saved'; if (data.design_id) state.designId = data.design_id; clearSession(); scheduleRender(); })
-      .catch(() => { state.saveState = 'saved'; clearSession(); scheduleRender(); });
+      .then(async r => {
+        if (r.status === 422) {
+          const { reason } = await r.json().catch(() => ({}));
+          state.errors.email = EMAIL_ERR[reason] || 'Please check your email address.';
+          state.saveState = 'idle';
+          scheduleRender();
+          return;
+        }
+        if (!r.ok) throw new Error(r.status);
+        const data = await r.json();
+        state.designId  = data.design_id;
+        state.saveState = 'saved';
+        saveSession(state);
+        scheduleRender();
+      })
+      .catch(() => { state.saveState = 'error'; scheduleRender(); });
   } else {
-    setTimeout(() => { state.saveState = 'saved'; clearSession(); scheduleRender(); }, 600);
+    // Backend not yet configured — capture email client-side only; do not clear session
+    state.saveState = 'pending';
+    scheduleRender();
   }
+}
+
+const SD_EMAIL_DOMAINS = ['gmail.com','yahoo.com','hotmail.com','outlook.com','icloud.com',
+                          'aol.com','me.com','live.com','msn.com','comcast.net'];
+const SD_EMAIL_TLDS = ['com','net','org','edu','co','io','us','ca'];
+
+function suggestEmail(email) {
+  const [local, domain] = (email || '').toLowerCase().split('@');
+  if (!domain) return null;
+  const near = (val, list) => list.find(c => {
+    if (c === val) return false;
+    let i = 0, j = 0, edits = 0;
+    while (i < val.length && j < c.length) {
+      if (val[i] === c[j]) { i++; j++; }
+      else {
+        edits++;
+        if (edits > 1) return false;
+        if (val.length > c.length) i++;
+        else if (c.length > val.length) j++;
+        else { i++; j++; }
+      }
+    }
+    return edits + (val.length - i) + (c.length - j) <= 1;
+  });
+  const parts = domain.split('.');
+  const tld = parts.pop(), base = parts.join('.');
+  const fixedDomain = near(domain, SD_EMAIL_DOMAINS);
+  if (fixedDomain) return `${local}@${fixedDomain}`;
+  const fixedTld = near(tld, SD_EMAIL_TLDS);
+  if (fixedTld) return `${local}@${base}.${fixedTld}`;
+  return null;
+}
+
+function syncDna(state, config) {
+  const apiBase = config.settings?.apiBase || '';
+  if (!apiBase) return;
+  const email = state.email || '';
+  const cust  = config.settings?.shopifyCustomerId || '';
+  if (!email && !cust) return;
+  fetch(`${apiBase}/api/dna-sync`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, shopify_customer_id: cust, state }),
+    keepalive: true,
+  }).catch(() => {});
 }
 
 function fireAnalytics(event, data) {
@@ -1408,14 +1630,25 @@ function fetchPersonalityNarratives(state, config, onSettled) {
     builds,
   };
 
-  fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 12000);
+  // New backend CORS allows only the Content-Type request header — never send
+  // X-Worker-Token (it fails preflight). Access control is server-side rate-limiting.
+  fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+    signal: controller.signal,
+  })
     .then(res => res.json())
     .then(data => {
+      clearTimeout(timer);
       state.personalityNarrativesLoading = false;
       if (data?.personalities?.length === 3) state.personalityNarratives = data.personalities;
       if (onSettled) onSettled();
     })
     .catch(err => {
+      clearTimeout(timer);
       state.personalityNarrativesLoading = false;
       console.warn('[SkierDNA] personality narratives unavailable', err);
       if (onSettled) onSettled();
@@ -1439,6 +1672,10 @@ function boot(root) {
     trueScaleAnchor:    root.dataset.trueScale          !== 'false',
     graphicsCollection: root.dataset.graphicsCollection || null,
     personalitiesUrl:   root.dataset.personalitiesUrl   || '',
+    workerToken:        root.dataset.workerToken        || '',
+    apiBase:            root.dataset.apiBase            || '',
+    shopifyCustomerId:    root.dataset.shopifyCustomerId    || '',
+    shopifyCustomerEmail: root.dataset.shopifyCustomerEmail || '',
     buttonContinue:     root.dataset.btnContinue        || 'theme_primary',
     buttonBack:         root.dataset.btnBack            || 'theme_secondary',
     buttonCta:          root.dataset.btnCta             || 'theme_secondary',
@@ -1450,16 +1687,39 @@ function boot(root) {
 
   // Resume from saved-design email link (?sd_design=)
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('sd_design')) {
-    state.resumeBanner = true;
-    state.resumeSource = 'url';
-    state.act          = 5;
+  const sdDesign = urlParams.get('sd_design');
+  state.savedDesigns = config.savedDesigns || [];
+  if (sdDesign) {
+    state.resumeBanner = true; state.resumeSource = 'url'; state.act = 5;
+    const apiBase = config.settings?.apiBase || '';
+    if (apiBase) {
+      fetch(`${apiBase}/api/designs/${encodeURIComponent(sdDesign)}`)
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (!data || !data.state) return;
+          const savedDesigns = state.savedDesigns;
+          Object.assign(state, data.state);
+          state.savedDesigns = savedDesigns;
+          state.act = 5;
+          saveSession(state);
+          scheduleRender();
+        })
+        .catch(() => {});
+    }
   } else {
     const saved = loadSession();
     if (saved) {
       PERSIST_KEYS.forEach(k => { if (saved[k] !== undefined) state[k] = saved[k]; });
       if (state.act > 1) { state.resumeBanner = true; state.resumeSource = 'local'; }
+    } else if (state.savedDesigns.length > 0) {
+      // Logged-in customer with prior designs, no active local session — show picker
+      state.showDesignPicker = true;
     }
+  }
+
+  // Pre-fill email for logged-in Shopify customers
+  if (config.settings.shopifyCustomerEmail && !state.email) {
+    state.email = config.settings.shopifyCustomerEmail;
   }
 
   // rAF-throttled render — saves session after every paint
@@ -1527,6 +1787,17 @@ function boot(root) {
     const t = e.target;
     if (!t.dataset.sdAction) return;
     dispatch({ target: t, type: 'change' }, root, state, config, scheduleRender);
+  });
+
+  // Email typo suggestion on blur
+  root.addEventListener('focusout', e => {
+    const t = e.target;
+    if (t.dataset.sdAction !== 'email') return;
+    const suggestion = suggestEmail(state.email);
+    if (suggestion !== state.emailSuggestion) {
+      state.emailSuggestion = suggestion;
+      scheduleRender();
+    }
   });
 
   // Close info tooltips when tapping/clicking outside, or when mouse leaves the row
