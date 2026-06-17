@@ -214,7 +214,7 @@ function renderSkiSVG(opts) {
     ? `<text x="${cx}" y="300" text-anchor="middle" font-family="monospace" font-size="8.5" fill="var(--sd-accent,#3270a8)" transform="rotate(90 ${cx} 300)">[ TOPSHEET GRAPHIC ]</text>` : '';
 
   const topSvg = `
-    <svg viewBox="0 0 ${viewW} 560" class="sd-ski-topview" aria-hidden="true">
+    <svg id="sd-design-svg" viewBox="0 0 ${viewW} 560" class="sd-ski-topview" aria-hidden="true">
       <defs><clipPath id="sk-${uid}"><path d="${outline}" transform="translate(${bx},0)"/></clipPath></defs>
       ${bodyFig}
       <g transform="translate(${bx},0)">
@@ -1270,9 +1270,8 @@ function dispatch(e, root, state, config, scheduleRender) {
   if (!target) return;
 
   const action = target.dataset.sdAction;
-  if (action === 'close-save' && e.target.closest('[data-sd-modal]')) {
-    if (!target.classList.contains('sd-modal-close') && !target.classList.contains('sd-modal-backdrop')) return;
-  }
+  // Block backdrop close when the click originated inside the modal box (not on a button).
+  if (action === 'close-save' && target.classList.contains('sd-modal-backdrop') && e.target.closest('[data-sd-modal]')) return;
 
   const value = target.dataset.value;
 
@@ -1489,7 +1488,46 @@ const EMAIL_ERR = {
   undeliverable:  "We couldn't reach that email domain — please check it.",
 };
 
-function handleSave(state, config, scheduleRender) {
+async function inlineSvgImages(svgEl) {
+  const clone = svgEl.cloneNode(true);
+  const XLINK = 'http://www.w3.org/1999/xlink';
+  await Promise.all([...clone.querySelectorAll('image')].map(async (node) => {
+    const href = node.getAttribute('href') || node.getAttributeNS(XLINK, 'href');
+    if (!href || href.startsWith('data:')) return;
+    try {
+      const blob = await (await fetch(href, { mode: 'cors' })).blob();
+      const dataUri = await new Promise((res) => {
+        const fr = new FileReader(); fr.onload = () => res(fr.result); fr.readAsDataURL(blob);
+      });
+      node.setAttribute('href', dataUri);
+      node.removeAttributeNS(XLINK, 'href');
+    } catch (_) { /* leave as-is — canvas taint catch will handle it */ }
+  }));
+  return clone;
+}
+
+async function svgToPngDataUrl(svgEl, scale = 2) {
+  const clone = await inlineSvgImages(svgEl);   // avoids canvas tainting
+  const xml  = new XMLSerializer().serializeToString(clone);
+  const blob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
+  const url  = URL.createObjectURL(blob);
+  try {
+    const img = new Image();
+    await new Promise((res, rej) => { img.onload = res; img.onerror = rej; img.src = url; });
+    const w = svgEl.viewBox?.baseVal?.width  || img.width  || 1200;
+    const h = svgEl.viewBox?.baseVal?.height || img.height || 600;
+    const canvas = document.createElement('canvas');
+    canvas.width = w * scale; canvas.height = h * scale;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(scale, scale);
+    ctx.drawImage(img, 0, 0, w, h);
+    return canvas.toDataURL('image/png');
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+async function handleSave(state, config, scheduleRender) {
   const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRe.test(state.email)) {
     state.errors = { email: 'Enter a valid email address.' };
@@ -1500,6 +1538,9 @@ function handleSave(state, config, scheduleRender) {
   state.errors = {}; state.saveState = 'saving';
   scheduleRender();
   fireAnalytics('save_design', { klaviyo_opt: state.klaviyoOptIn });
+
+  let image = null;
+  try { image = await svgToPngDataUrl(document.querySelector('#sd-design-svg')); } catch (_) {}
 
   const apiBase = config.settings?.apiBase || '';
   if (apiBase) {
@@ -1513,6 +1554,7 @@ function handleSave(state, config, scheduleRender) {
         shopify_customer_id: config.settings?.shopifyCustomerId || '',
         state:               state,
         spec:                computeSpec(state),
+        image,
       }),
     })
       .then(async r => {
